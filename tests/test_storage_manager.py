@@ -61,3 +61,20 @@ class TestStorageManager(unittest.TestCase):
         assert self.manager.uuid_exists('some_uuid') == exists
         assert self.exists_mock.call_count == 1
         assert self.exists_mock.call_args.args == (os.path.join(settings.UPLOAD_FOLDER, 'some_uuid'), )
+
+    def test_read_data(self):
+        self.open_mock.return_value.__enter__.return_value.read.return_value = 'READ DATA'
+
+        assert self.manager.read_data('some_uuid') == 'READ DATA'
+
+        folder = os.path.join(settings.UPLOAD_FOLDER, 'some_uuid')
+        data_path = os.path.join(folder, 'data')
+
+        assert self.open_mock.call_args.args == (data_path, 'r')
+
+    def test_read_data(self):
+        self.manager.read_file('some_uuid')
+
+        folder = os.path.join(settings.UPLOAD_FOLDER, 'some_uuid')
+        file_path = os.path.join(folder, 'file')
+        assert self.open_mock.call_args.args == (file_path, 'r')
