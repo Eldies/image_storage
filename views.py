@@ -57,7 +57,7 @@ class ImageView(MethodView):
         logging.debug('Generated uuid "{}"'.format(generated))
         return generated
 
-    def post(self):
+    def post(self, filename=None):
         self.check_auth()
 
         if 'file' not in request.files:
@@ -68,6 +68,8 @@ class ImageView(MethodView):
         data = dict(
             data=dict(request.form),
             mimetype=file.mimetype,
+            original_filename=file.filename,
+            given_filename=filename,
         )
         uuid = self.generate_new_uuid()
 

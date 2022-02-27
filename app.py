@@ -13,6 +13,7 @@ def create_app():
     app.add_url_rule('/ping', view_func=views.ping)
 
     app.add_url_rule('/v1/image/', view_func=views.ImageView.as_view('image_post'), methods=['POST'])
+    app.add_url_rule('/v1/image/<filename>', view_func=views.ImageView.as_view('image_post2'), methods=['POST'])
     app.add_url_rule('/v1/image/<uuid>', view_func=views.ImageView.as_view('image_get'), methods=['GET'])
 
     dictConfig(settings.LOGGING_CONFIG)
