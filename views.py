@@ -36,6 +36,8 @@ class ImageView(MethodView):
         ))
 
     def check_auth(self):
+        logging.debug('All headers: {}'.format(request.headers))
+        logging.debug('All header keys: {}'.format(list(request.headers.keys())))
         api_key = request.headers.get('X-API-KEY')
         logging.debug('Provided api_key: "{}"'.format(api_key))
         if api_key is None:
