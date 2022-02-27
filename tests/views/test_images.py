@@ -61,7 +61,10 @@ class TestImageView(unittest.TestCase):
         assert self.image_storage_mock.return_value.uuid_exists.call_count == uuid_exists_call_count
         assert self.image_storage_mock.return_value.save_image.call_count == 1
         save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
-        assert json.loads(save_image_call_args[2]) == additional_data
+        assert json.loads(save_image_call_args[2]) == dict(
+            data=additional_data,
+            mimetype='image/jpeg',
+        )
         assert response.status_code == 200
         assert response.json == {'status': 'ok', 'uuid': 'random_uuid'}
 

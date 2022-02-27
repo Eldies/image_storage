@@ -52,16 +52,21 @@ class ImageView(MethodView):
 
     def post(self):
         self.check_auth()
-        data = dict(request.form)
 
         if 'file' not in request.files:
             self.abort(400, error='No file')
 
+        file = request.files.get('file')
+
+        data = dict(
+            data=dict(request.form),
+            mimetype=file.mimetype,
+        )
         uuid = self.generate_new_uuid()
 
         self.storage_manager.save_image(
             uuid,
-            request.files.get('file'),
+            file,
             json.dumps(data),
         )
         return jsonify(dict(

@@ -21,6 +21,7 @@ class TestStorageManager(unittest.TestCase):
             patch("builtins.open", self.open_mock),
             patch("storage_manager.os.makedirs", self.makedirs_mock),
             patch("storage_manager.os.path.exists", self.exists_mock),
+            patch('settings.UPLOAD_FOLDER', 'some_path'),
         ]
         for p in self.patches:
             p.start()
