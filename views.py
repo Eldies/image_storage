@@ -59,7 +59,10 @@ class ImageView(MethodView):
         return generated
 
     def post(self):
-        data = dict(owner=self.user_id)
+        data = dict(
+            dict(request.form),
+            owner=self.user_id,
+        )
 
         if 'file' not in request.files:
             self.abort(400, error='No file')

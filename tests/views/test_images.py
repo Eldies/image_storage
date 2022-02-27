@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
+import json
 import logging
 import unittest
 from unittest.mock import Mock, patch
@@ -55,6 +56,26 @@ class TestImageView(unittest.TestCase):
 
     def test_post_ok(self):
         data = {
+            'file': (io.BytesIO(b'abcdef'), 'test.jpg'),
+        }
+        response = self.client.post(
+            '/v1/image/',
+            headers={'Authorization': 'Bearer {"id": 123456}'},
+            data=data,
+            content_type='multipart/form-data',
+        )
+        assert self.get_user_mock.call_count == 1
+        assert self.get_user_mock.call_args.args == ('{"id": 123456}',)
+        assert self.image_storage_mock.call_count == 1
+        assert self.image_storage_mock.return_value.uuid_exists.call_count == 1
+        assert self.image_storage_mock.return_value.save_image.call_count == 1
+        save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
+        assert json.loads(save_image_call_args[2]) == dict(owner=123456)
+        assert response.status_code == 200
+        assert response.json == {'status': 'ok', 'uuid': 'random_uuid'}
+
+    def test_post_ok_with_some_data(self):
+        data = {
             'some_key': 'some_data',
             'file': (io.BytesIO(b'abcdef'), 'test.jpg'),
         }
@@ -69,5 +90,7 @@ class TestImageView(unittest.TestCase):
         assert self.image_storage_mock.call_count == 1
         assert self.image_storage_mock.return_value.uuid_exists.call_count == 1
         assert self.image_storage_mock.return_value.save_image.call_count == 1
+        save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
+        assert json.loads(save_image_call_args[2]) == dict(owner=123456, some_key='some_data')
         assert response.status_code == 200
         assert response.json == {'status': 'ok', 'uuid': 'random_uuid'}
