@@ -24,4 +24,4 @@ class StorageManager(object):
             return f.read()
 
     def read_file(self, uuid):
-        return open(os.path.join(self.path_for_uuid(uuid), 'file'), 'r')
+        return open(os.path.join(self.path_for_uuid(uuid), 'file'), 'rb')

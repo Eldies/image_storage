@@ -9,6 +9,7 @@ from flask import (
     jsonify,
     make_response,
     request,
+    send_file,
 )
 from flask.views import MethodView
 
@@ -73,3 +74,11 @@ class ImageView(MethodView):
             status='ok',
             uuid=uuid,
         ))
+
+    def get(self, uuid):
+        if not self.storage_manager.uuid_exists(uuid):
+            self.abort(404, 'Not Found')
+        return send_file(
+            self.storage_manager.read_file(uuid),
+            mimetype=json.loads(self.storage_manager.read_data(uuid)).get('mimetype'),
+        )

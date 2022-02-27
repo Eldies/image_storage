@@ -72,9 +72,9 @@ class TestStorageManager(unittest.TestCase):
 
         assert self.open_mock.call_args.args == (data_path, 'r')
 
-    def test_read_data(self):
+    def test_read_file(self):
         self.manager.read_file('some_uuid')
 
         folder = os.path.join(settings.UPLOAD_FOLDER, 'some_uuid')
         file_path = os.path.join(folder, 'file')
-        assert self.open_mock.call_args.args == (file_path, 'r')
+        assert self.open_mock.call_args.args == (file_path, 'rb')
