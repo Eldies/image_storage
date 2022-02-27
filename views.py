@@ -26,7 +26,13 @@ def ping():
 
 class ImageView(MethodView):
     def abort(self, status_code, error):
-        abort(make_response(jsonify(error=error), status_code))
+        abort(make_response(
+            jsonify(
+                error=error,
+                status='error',
+            ),
+            status_code,
+        ))
 
     def check_auth(self):
         api_key = request.headers.get('X-API-KEY')

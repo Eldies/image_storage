@@ -34,17 +34,17 @@ class TestImageView(unittest.TestCase):
     def test_post_no_api_key(self):
         response = self.client.post('/v1/image/')
         assert response.status_code == 401
-        assert response.json == {'error': 'Unauthorized'}
+        assert response.json == {'status': 'error', 'error': 'Unauthorized'}
 
     def test_post_wrong_api_key(self):
         response = self.client.post('/v1/image/', headers={'X-API-KEY': 'random_string'})
         assert response.status_code == 403
-        assert response.json == {'error': 'Invalid api key'}
+        assert response.json == {'status': 'error', 'error': 'Invalid api key'}
 
     def test_post_no_file(self):
         response = self.client.post('/v1/image/', headers={'X-API-KEY': 'TEST_API_KEY'})
         assert response.status_code == 400
-        assert response.json == {'error': 'No file'}
+        assert response.json == {'status': 'error', 'error': 'No file'}
 
     def check_ok_request(self, additional_data, uuid_exists_call_count=1):
         data = dict(
@@ -82,11 +82,11 @@ class TestImageView(unittest.TestCase):
         self.image_storage_mock.return_value.uuid_exists.return_value = True
         self.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
         self.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
-        response = self.client.get('/v1/image/some_uuid/image')
+        response = self.client.get('/v1/image/some_uuid')
         assert response.status_code == 200
         assert response.content_type == 'image/jpeg'
         assert response.data == b'abcdef'
 
     def test_read_image_unknown_uuid(self):
-        response = self.client.get('/v1/image/some_uuid/image')
+        response = self.client.get('/v1/image/some_uuid')
         assert response.status_code == 404
