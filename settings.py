@@ -2,7 +2,7 @@
 import os
 
 
-UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.curdir), 'uploads')
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
 LOGGING_CONFIG = {
     'version': 1,
@@ -19,7 +19,7 @@ LOGGING_CONFIG = {
         },
     },
     'root': {
-        'level': 'INFO',
+        'level': 'DEBUG',
         'handlers': ['console']
     },
 }
