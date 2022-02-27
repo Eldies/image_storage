@@ -13,8 +13,8 @@ from flask import (
 from flask.views import MethodView
 
 from auth import (
-    get_user_id_from_token,
-    InvalidTokenError,
+    check_api_key,
+    InvalidApiKey,
 )
 from storage_manager import StorageManager
 
@@ -23,28 +23,20 @@ def ping():
     return 'pong'
 
 
-TOKEN_PREFIX = 'Bearer '
-
-
 class ImageView(MethodView):
     def abort(self, status_code, error):
         abort(make_response(jsonify(error=error), status_code))
 
-    @cached_property
-    def user_id(self):
-        token = request.headers.get('Authorization')
-        logging.debug('Provided token: "{}"'.format(token))
-        if token is None:
-            self.abort(401, error='Token not provided')
-        if not token.startswith(TOKEN_PREFIX):
-            self.abort(403, error='Invalid token')
-
-        token = token[len(TOKEN_PREFIX):].strip()
+    def check_auth(self):
+        api_key = request.headers.get('X-API-KEY')
+        logging.debug('Provided api_key: "{}"'.format(api_key))
+        if api_key is None:
+            self.abort(401, 'Unauthorized')
 
         try:
-            return get_user_id_from_token(token)
-        except InvalidTokenError:
-            self.abort(403, error='Invalid token')
+            check_api_key(api_key)
+        except InvalidApiKey:
+            self.abort(403, error='Invalid api key')
 
     @cached_property
     def storage_manager(self):
@@ -59,10 +51,8 @@ class ImageView(MethodView):
         return generated
 
     def post(self):
-        data = dict(
-            dict(request.form),
-            owner=self.user_id,
-        )
+        self.check_auth()
+        data = dict(request.form)
 
         if 'file' not in request.files:
             self.abort(400, error='No file')

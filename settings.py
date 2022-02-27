@@ -4,6 +4,8 @@ import os
 
 UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
 
+CLIENT_API_KEY = os.environ.get('CLIENT_API_KEY')
+
 LOGGING_CONFIG = {
     'version': 1,
     'formatters': {

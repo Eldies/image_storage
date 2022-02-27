@@ -1,20 +1,11 @@
 # -*- coding: utf-8 -*-
-import json
+import settings
 
 
-class InvalidTokenError(ValueError):
+class InvalidApiKey(ValueError):
     pass
 
 
-class TokenDoesNotHaveIdError(InvalidTokenError):
-    pass
-
-
-def get_user_id_from_token(token):
-    try:
-        decoded_token = json.loads(token)
-        return decoded_token['id']
-    except KeyError:
-        raise TokenDoesNotHaveIdError()
-    except:
-        raise InvalidTokenError
+def check_api_key(api_key):
+    if api_key != settings.CLIENT_API_KEY:
+        raise InvalidApiKey()
