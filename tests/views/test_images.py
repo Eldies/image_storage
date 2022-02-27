@@ -46,10 +46,11 @@ class TestImageView(unittest.TestCase):
         assert response.status_code == 400
         assert response.json == {'error': 'No file'}
 
-    def test_post_ok(self):
-        data = {
-            'file': (io.BytesIO(b'abcdef'), 'test.jpg'),
-        }
+    def check_ok_request(self, additional_data, uuid_exists_call_count=1):
+        data = dict(
+            file=(io.BytesIO(b'abcdef'), 'test.jpg'),
+            **additional_data
+        )
         response = self.client.post(
             '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
@@ -57,28 +58,19 @@ class TestImageView(unittest.TestCase):
             content_type='multipart/form-data',
         )
         assert self.image_storage_mock.call_count == 1
-        assert self.image_storage_mock.return_value.uuid_exists.call_count == 1
+        assert self.image_storage_mock.return_value.uuid_exists.call_count == uuid_exists_call_count
         assert self.image_storage_mock.return_value.save_image.call_count == 1
         save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
-        assert json.loads(save_image_call_args[2]) == dict()
+        assert json.loads(save_image_call_args[2]) == additional_data
         assert response.status_code == 200
         assert response.json == {'status': 'ok', 'uuid': 'random_uuid'}
 
+    def test_post_ok(self):
+        self.check_ok_request({})
+
+    def test_post_ok_generated_existing_uuid(self):
+        self.image_storage_mock.return_value.uuid_exists.side_effect = [True, True, False]
+        self.check_ok_request({}, uuid_exists_call_count=3)
+
     def test_post_ok_with_some_data(self):
-        data = {
-            'some_key': 'some_data',
-            'file': (io.BytesIO(b'abcdef'), 'test.jpg'),
-        }
-        response = self.client.post(
-            '/v1/image/',
-            headers={'X-API-KEY': 'TEST_API_KEY'},
-            data=data,
-            content_type='multipart/form-data',
-        )
-        assert self.image_storage_mock.call_count == 1
-        assert self.image_storage_mock.return_value.uuid_exists.call_count == 1
-        assert self.image_storage_mock.return_value.save_image.call_count == 1
-        save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
-        assert json.loads(save_image_call_args[2]) == dict(some_key='some_data')
-        assert response.status_code == 200
-        assert response.json == {'status': 'ok', 'uuid': 'random_uuid'}
+        self.check_ok_request({'some_key': 'some_data'})
