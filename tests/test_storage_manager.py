@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
 import os
+from parameterized import parameterized
 import unittest
 from unittest.mock import patch, mock_open, Mock
+
+import settings
 from storage_manager import StorageManager
-from parameterized import parameterized
 
 
 class TestStorageManager(unittest.TestCase):
@@ -28,7 +30,7 @@ class TestStorageManager(unittest.TestCase):
             p.stop()
 
     def check_save(self, uuid, data=None):
-        folder = os.path.join(self.manager.dir, uuid)
+        folder = os.path.join(settings.UPLOAD_FOLDER, uuid)
         file_path = os.path.join(folder, 'file')
         data_path = os.path.join(folder, 'data')
 
@@ -40,7 +42,7 @@ class TestStorageManager(unittest.TestCase):
 
         assert self.open_mock.call_count == (1 if data else 0)
         if data:
-            assert self.open_mock.call_args.args == (data_path,)
+            assert self.open_mock.call_args.args == (data_path, 'w')
             assert self.open_mock.return_value.__enter__.return_value.write.call_count == 1
             assert self.open_mock.return_value.__enter__.return_value.write.call_args.args == (data,)
 
@@ -57,4 +59,4 @@ class TestStorageManager(unittest.TestCase):
         self.exists_mock.return_value = exists
         assert self.manager.uuid_exists('some_uuid') == exists
         assert self.exists_mock.call_count == 1
-        assert self.exists_mock.call_args.args == (os.path.join(self.manager.dir, 'some_uuid'), )
+        assert self.exists_mock.call_args.args == (os.path.join(settings.UPLOAD_FOLDER, 'some_uuid'), )

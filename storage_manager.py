@@ -14,5 +14,5 @@ class StorageManager(object):
         os.makedirs(folder)
         file.save(os.path.join(folder, 'file'))
         if data:
-            with open(os.path.join(folder, 'data')) as f:
+            with open(os.path.join(folder, 'data'), 'w') as f:
                 f.write(data)
