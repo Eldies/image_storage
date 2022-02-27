@@ -4,6 +4,7 @@ import json
 import logging
 from functools import cached_property
 import uuid
+from io import BytesIO
 
 from flask import (
     abort,
@@ -64,21 +65,29 @@ class ImageView(MethodView):
 
         file = request.files.get('file')
 
+        stream = BytesIO()
+        file.save(stream)
+        stream.seek(0)
+        file_content = stream.read()
+
+        if len(file_content) == 0:
+            self.abort(400, error='Empty file')
+
         data = dict(
             data=dict(request.form),
             mimetype=file.mimetype,
-            original_filename=file.filename,
-            given_filename=filename,
+            content_length=len(file_content),
         )
 
         if filename is None:
             filename = self.generate_random_filename()
 
         filename += '-' + self.generate_time_based_suffix()
+        logging.debug('Saving with uuid: {}'.format(filename))
 
         self.storage_manager.save_image(
             filename,
-            file,
+            file_content,
             json.dumps(data),
         )
         return jsonify(dict(

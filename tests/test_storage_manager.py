@@ -14,7 +14,6 @@ class TestStorageManager(unittest.TestCase):
 
         self.open_mock = mock_open()
         self.makedirs_mock = Mock()
-        self.file_mock = Mock()
         self.exists_mock = Mock()
 
         self.patches = [
@@ -38,21 +37,20 @@ class TestStorageManager(unittest.TestCase):
         assert self.makedirs_mock.call_count == 1
         assert self.makedirs_mock.call_args.args == (folder,)
 
-        assert self.file_mock.save.call_count == 1
-        assert self.file_mock.save.call_args.args == (file_path,)
-
-        assert self.open_mock.call_count == (1 if data else 0)
+        assert self.open_mock.call_count == (2 if data else 1)
+        assert self.open_mock.return_value.__enter__.return_value.write.call_count == (2 if data else 1)
+        assert self.open_mock.call_args_list[0].args == (file_path, 'wb')
+        assert self.open_mock.return_value.__enter__.return_value.write.call_args_list[0].args == (b'abcdef',)
         if data:
-            assert self.open_mock.call_args.args == (data_path, 'w')
-            assert self.open_mock.return_value.__enter__.return_value.write.call_count == 1
-            assert self.open_mock.return_value.__enter__.return_value.write.call_args.args == (data,)
+            assert self.open_mock.call_args_list[1].args == (data_path, 'w')
+            assert self.open_mock.return_value.__enter__.return_value.write.call_args_list[1].args == (data,)
 
     def test_save_image_ok(self):
-        self.manager.save_image('some_uuid', self.file_mock, 'some_data')
+        self.manager.save_image('some_uuid', b'abcdef', 'some_data')
         self.check_save('some_uuid', 'some_data')
 
     def test_save_image_no_data_ok(self):
-        self.manager.save_image('some_uuid', self.file_mock)
+        self.manager.save_image('some_uuid', b'abcdef')
         self.check_save('some_uuid')
 
     @parameterized.expand([(True,), (False,)])

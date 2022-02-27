@@ -11,10 +11,11 @@ class StorageManager(object):
     def uuid_exists(self, uuid):
         return os.path.exists(self.path_for_uuid(uuid))
 
-    def save_image(self, uuid, file, data=None):
+    def save_image(self, uuid, file_content, data=None):
         folder = self.path_for_uuid(uuid)
         os.makedirs(folder)
-        file.save(os.path.join(folder, 'file'))
+        with open(os.path.join(folder, 'file'), 'wb') as f:
+            f.write(file_content)
         if data:
             with open(os.path.join(folder, 'data'), 'w') as f:
                 f.write(data)

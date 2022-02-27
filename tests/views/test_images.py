@@ -67,8 +67,7 @@ class TestImageView(unittest.TestCase):
         assert json.loads(save_image_call_args[2]) == dict(
             data=additional_data,
             mimetype='image/jpeg',
-            original_filename='test.jpg',
-            given_filename=filename,
+            content_length=6,
         )
         assert response.status_code == 200
         assert response.json == {
@@ -97,3 +96,16 @@ class TestImageView(unittest.TestCase):
     def test_read_image_unknown_uuid(self):
         response = self.client.get('/v1/image/some_uuid')
         assert response.status_code == 404
+
+    def test_empty_file(self):
+        data = dict(
+            file=(io.BytesIO(b''), 'test.jpg'),
+        )
+        response = self.client.post(
+            '/v1/image/',
+            headers={'X-API-KEY': 'TEST_API_KEY'},
+            data=data,
+            content_type='multipart/form-data',
+        )
+        assert response.status_code == 400
+        assert response.json == {'status': 'error', 'error': 'Empty file'}
