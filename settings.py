@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+import os
+
+
+UPLOAD_FOLDER = os.path.join(os.path.abspath(os.path.curdir), 'uploads')
 
 LOGGING_CONFIG = {
     'version': 1,
