@@ -1,7 +1,7 @@
 ## конфиг для docker-compose
 
     image_storage:
-      build: git@github.com:Eldies/image_storage.git
+      build: https://github.com/Eldies/image_storage.git
       restart: always
       environment:
         UPLOAD_FOLDER: /uploads
@@ -13,4 +13,4 @@
           limits:
             cpus: '0.2'
       volumes:
-        ${DOCKER_CONTAINERS_DATA_FOLDER}/image_storage:/uploads
+        - ${DOCKER_CONTAINERS_DATA_FOLDER}/image_storage:/uploads
