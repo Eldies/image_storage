@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 import json
 import logging
 from functools import cached_property
@@ -49,13 +50,11 @@ class ImageView(MethodView):
     def storage_manager(self):
         return StorageManager()
 
-    def generate_new_uuid(self):
-        generated = str(uuid.uuid4())
-        while self.storage_manager.uuid_exists(generated):
-            logging.debug('Uuid "{}" already exists. Regenerating'.format(generated))
-            generated = str(uuid.uuid4())
-        logging.debug('Generated uuid "{}"'.format(generated))
-        return generated
+    def generate_random_filename(self):
+        return base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5]
+
+    def generate_time_based_suffix(self):
+        return base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2]
 
     def post(self, filename=None):
         self.check_auth()
@@ -71,16 +70,20 @@ class ImageView(MethodView):
             original_filename=file.filename,
             given_filename=filename,
         )
-        uuid = self.generate_new_uuid()
+
+        if filename is None:
+            filename = self.generate_random_filename()
+
+        filename += '-' + self.generate_time_based_suffix()
 
         self.storage_manager.save_image(
-            uuid,
+            filename,
             file,
             json.dumps(data),
         )
         return jsonify(dict(
             status='ok',
-            uuid=uuid,
+            uuid=filename,
         ))
 
     def get(self, uuid):

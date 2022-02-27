@@ -3,6 +3,7 @@ import io
 import json
 import logging
 import unittest
+import uuid
 from unittest.mock import Mock, patch
 
 from app import app
@@ -17,12 +18,15 @@ class TestImageView(unittest.TestCase):
 
         self.image_storage_mock = Mock(spec=StorageManager)
         self.image_storage_mock.return_value.uuid_exists.return_value = False
-        self.uuid4_mock = Mock(return_value='random_uuid')
+        self.uuid_mock = Mock(
+            uuid1=Mock(return_value=uuid.UUID(bytes=b'0987654321098765')),
+            uuid4=Mock(return_value=uuid.UUID(bytes=b'1234567890123456')),
+        )
 
         self.patches = [
             patch('settings.CLIENT_API_KEY', 'TEST_API_KEY'),
             patch('views.StorageManager', self.image_storage_mock),
-            patch('views.uuid.uuid4', self.uuid4_mock),
+            patch('views.uuid', self.uuid_mock),
         ]
         for p in self.patches:
             p.start()
@@ -46,34 +50,37 @@ class TestImageView(unittest.TestCase):
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, additional_data, uuid_exists_call_count=1):
+    def check_ok_request(self, additional_data, filename=None):
         data = dict(
             file=(io.BytesIO(b'abcdef'), 'test.jpg'),
             **additional_data
         )
         response = self.client.post(
-            '/v1/image/',
+            '/v1/image/{}'.format(filename or ''),
             headers={'X-API-KEY': 'TEST_API_KEY'},
             data=data,
             content_type='multipart/form-data',
         )
         assert self.image_storage_mock.call_count == 1
-        assert self.image_storage_mock.return_value.uuid_exists.call_count == uuid_exists_call_count
         assert self.image_storage_mock.return_value.save_image.call_count == 1
         save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
         assert json.loads(save_image_call_args[2]) == dict(
             data=additional_data,
             mimetype='image/jpeg',
+            original_filename='test.jpg',
+            given_filename=filename,
         )
         assert response.status_code == 200
-        assert response.json == {'status': 'ok', 'uuid': 'random_uuid'}
+        assert response.json == {
+            'status': 'ok',
+            'uuid': (filename if filename else 'MTIzN') + '-MDk4NzY1NDMyMTA5ODc2NQ',
+        }
 
     def test_post_ok(self):
         self.check_ok_request({})
 
-    def test_post_ok_generated_existing_uuid(self):
-        self.image_storage_mock.return_value.uuid_exists.side_effect = [True, True, False]
-        self.check_ok_request({}, uuid_exists_call_count=3)
+    def test_post_ok_with_filename(self):
+        self.check_ok_request({}, filename='filename')
 
     def test_post_ok_with_some_data(self):
         self.check_ok_request({'some_key': 'some_data'})
