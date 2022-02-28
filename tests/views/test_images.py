@@ -50,13 +50,16 @@ class TestImageView(unittest.TestCase):
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, additional_data, filename=None):
+    def check_ok_request(self, additional_data, filename_in_address=None, filename_in_form=None):
         data = dict(
             file=(io.BytesIO(b'abcdef'), 'test.jpg'),
             **additional_data
         )
+        if filename_in_form:
+            data['filename'] = filename_in_form
+            additional_data['filename'] = filename_in_form
         response = self.client.post(
-            '/v1/image/{}'.format(filename or ''),
+            '/v1/image/{}'.format(filename_in_address or ''),
             headers={'X-API-KEY': 'TEST_API_KEY'},
             data=data,
             content_type='multipart/form-data',
@@ -72,32 +75,22 @@ class TestImageView(unittest.TestCase):
         assert response.status_code == 200
         assert response.json == {
             'status': 'ok',
-            'uuid': (filename if filename else 'MTIzN') + '-MDk4NzY1NDMyMTA5ODc2NQ',
+            'uuid': (filename_in_address or filename_in_form or 'MTIzN') + '-MDk4NzY1NDMyMTA5ODc2NQ',
         }
 
     def test_post_ok(self):
         self.check_ok_request({})
 
     def test_post_ok_with_filename(self):
-        self.check_ok_request({}, filename='filename')
+        self.check_ok_request({}, filename_in_address='filename')
+
+    def test_post_ok_with_filename_in_form(self):
+        self.check_ok_request({}, filename_in_form='filename')
 
     def test_post_ok_with_some_data(self):
         self.check_ok_request({'some_key': 'some_data'})
 
-    def test_read_image(self):
-        self.image_storage_mock.return_value.uuid_exists.return_value = True
-        self.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
-        self.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
-        response = self.client.get('/v1/image/some_uuid')
-        assert response.status_code == 200
-        assert response.content_type == 'image/jpeg'
-        assert response.data == b'abcdef'
-
-    def test_read_image_unknown_uuid(self):
-        response = self.client.get('/v1/image/some_uuid')
-        assert response.status_code == 404
-
-    def test_empty_file(self):
+    def test_post_empty_file(self):
         data = dict(
             file=(io.BytesIO(b''), 'test.jpg'),
         )
@@ -109,3 +102,16 @@ class TestImageView(unittest.TestCase):
         )
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'Empty file'}
+
+    def test_get_ok(self):
+        self.image_storage_mock.return_value.uuid_exists.return_value = True
+        self.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
+        self.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
+        response = self.client.get('/v1/image/some_uuid')
+        assert response.status_code == 200
+        assert response.content_type == 'image/jpeg'
+        assert response.data == b'abcdef'
+
+    def test_get_unknown_uuid(self):
+        response = self.client.get('/v1/image/some_uuid')
+        assert response.status_code == 404

@@ -51,11 +51,11 @@ class ImageView(MethodView):
     def storage_manager(self):
         return StorageManager()
 
-    def generate_random_filename(self):
-        return base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5]
-
-    def generate_time_based_suffix(self):
-        return base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2]
+    def generate_filename(self, suggested_filename):
+        return '{}-{}'.format(
+            suggested_filename or base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5],
+            base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2],
+        )
 
     def post(self, filename=None):
         self.check_auth()
@@ -79,10 +79,7 @@ class ImageView(MethodView):
             content_length=len(file_content),
         )
 
-        if filename is None:
-            filename = self.generate_random_filename()
-
-        filename += '-' + self.generate_time_based_suffix()
+        filename = self.generate_filename(filename or request.form.get('filename'))
         logging.debug('Saving with uuid: {}'.format(filename))
 
         self.storage_manager.save_image(
