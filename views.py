@@ -57,12 +57,7 @@ class ImageView(MethodView):
             base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2],
         )
 
-    def post(self, filename=None):
-        self.check_auth()
-
-        if 'file' not in request.files:
-            self.abort(400, error='No file')
-
+    def _process_file(self):
         file = request.files.get('file')
 
         stream = BytesIO()
@@ -78,6 +73,33 @@ class ImageView(MethodView):
             mimetype=file.mimetype,
             content_length=len(file_content),
         )
+
+        return file_content, data
+
+    def _process_base64(self):
+        encoded = request.form['base64']
+        file_content = base64.b64decode(encoded)
+
+        form_data = dict(request.form)
+        del form_data['base64']
+
+        data = dict(
+            data=form_data,
+            mimetype='image/jpeg',
+            content_length=len(file_content),
+        )
+
+        return file_content, data
+
+    def post(self, filename=None):
+        self.check_auth()
+
+        if 'file' in request.files:
+            file_content, data = self._process_file()
+        elif request.form.get('base64'):
+            file_content, data = self._process_base64()
+        else:
+            self.abort(400, error='No file')
 
         filename = self.generate_filename(filename or request.form.get('filename'))
         logging.debug('Saving with uuid: {}'.format(filename))
