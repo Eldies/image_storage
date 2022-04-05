@@ -91,6 +91,11 @@ class ImageView(MethodView):
 
         return file_content, data
 
+    def get_filename_from_form(self):
+        for key in request.form:
+            if key.lower() in ['filename', 'file_name']:
+                return request.form[key]
+
     def post(self, filename=None):
         self.check_auth()
 
@@ -101,7 +106,7 @@ class ImageView(MethodView):
         else:
             self.abort(400, error='No file')
 
-        filename = self.generate_filename(filename or request.form.get('filename'))
+        filename = self.generate_filename(filename or self.get_filename_from_form())
         logging.debug('Saving with uuid: {}'.format(filename))
 
         self.storage_manager.save_image(
