@@ -76,11 +76,10 @@ class ImageView(MethodView):
 
         return file_content, data
 
-    def _process_base64(self):
-        encoded = request.form['base64']
+    def _process_base64(self, form_data):
+        encoded = form_data['base64']
         file_content = base64.b64decode(encoded)
 
-        form_data = dict(request.form)
         del form_data['base64']
 
         data = dict(
@@ -95,6 +94,12 @@ class ImageView(MethodView):
         for key in request.form:
             if key.lower() in ['filename', 'file_name']:
                 return request.form[key]
+        try:
+            for key in request.json:
+                if key.lower() in ['filename', 'file_name']:
+                    return request.json[key]
+        except:
+            pass
 
     def post(self, filename=None):
         self.check_auth()
@@ -102,7 +107,9 @@ class ImageView(MethodView):
         if 'file' in request.files:
             file_content, data = self._process_file()
         elif request.form.get('base64'):
-            file_content, data = self._process_base64()
+            file_content, data = self._process_base64(dict(request.form))
+        elif request.json.get('base64'):
+            file_content, data = self._process_base64(request.json)
         else:
             self.abort(400, error='No file')
 
