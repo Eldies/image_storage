@@ -98,8 +98,24 @@ class TestImageView(unittest.TestCase):
     def test_post_ok_json_with_some_key(self):
         self.check_ok_request({'foo': 'bar'}, make_json=True, _base64=True)
 
-    def test_post_ok_with_filename_in_form(self):
+    def test_post_ok_with_filename(self):
         self.check_ok_request({}, filename_in_form='filename')
+
+    def test_post_ok_with_file_name(self):
+        response = self.client.post(
+            '/v1/image/',
+            headers={'X-API-KEY': 'TEST_API_KEY'},
+            data={
+                'file': (io.BytesIO(b'abcdef'), 'test.jpg'),
+                'file_name': 'filename',
+            },
+            content_type='multipart/form-data',
+        )
+        assert response.status_code == 200
+        assert response.json == {
+            'status': 'ok',
+            'uuid': 'filename-MDk4NzY1NDMyMTA5ODc2NQ',
+        }
 
     def test_post_ok_with_some_data(self):
         self.check_ok_request({'some_key': 'some_data'})
