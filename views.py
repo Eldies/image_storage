@@ -108,7 +108,7 @@ class ImageView(MethodView):
             file_content, data = self._process_file()
         elif request.form.get('base64'):
             file_content, data = self._process_base64(dict(request.form))
-        elif request.json is not None and request.json.get('base64'):
+        elif request.is_json and request.json.get('base64'):
             file_content, data = self._process_base64(request.json)
         else:
             self.abort(400, error='No file')
