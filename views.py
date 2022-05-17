@@ -101,7 +101,7 @@ class ImageView(MethodView):
         except:
             pass
 
-    def post(self, filename=None):
+    def post(self):
         self.check_auth()
 
         if 'file' in request.files:
@@ -113,7 +113,7 @@ class ImageView(MethodView):
         else:
             self.abort(400, error='No file')
 
-        filename = self.generate_filename(filename or self.get_filename_from_form())
+        filename = self.generate_filename(self.get_filename_from_form())
         logging.debug('Saving with uuid: {}'.format(filename))
 
         self.storage_manager.save_image(

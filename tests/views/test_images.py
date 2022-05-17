@@ -51,7 +51,7 @@ class TestImageView(unittest.TestCase):
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, additional_data, filename_in_address=None, filename_in_form=None, make_json=False, _base64=False):
+    def check_ok_request(self, additional_data, filename_in_form=None, make_json=False, _base64=False):
         data = dict(**additional_data)
         if _base64:
             data['base64'] = base64.b64encode(b'abcdef').decode()
@@ -60,13 +60,18 @@ class TestImageView(unittest.TestCase):
         if filename_in_form:
             data['filename'] = filename_in_form
             additional_data['filename'] = filename_in_form
-        expected_filename = (filename_in_address or filename_in_form or 'MTIzN') + '-MDk4NzY1NDMyMTA5ODc2NQ'
+        expected_filename = (filename_in_form or 'MTIzN') + '-MDk4NzY1NDMyMTA5ODc2NQ'
         response = self.client.post(
-            '/v1/image/{}'.format(filename_in_address or ''),
+            '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
             data=json.dumps(data) if make_json else data,
             content_type='application/json' if make_json else 'multipart/form-data',
         )
+        assert response.status_code == 200
+        assert response.json == {
+            'status': 'ok',
+            'uuid': expected_filename,
+        }
         assert self.image_storage_mock.call_count == 1
         assert self.image_storage_mock.return_value.save_image.call_count == 1
         save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
@@ -77,11 +82,6 @@ class TestImageView(unittest.TestCase):
             mimetype='image/jpeg',
             content_length=6,
         )
-        assert response.status_code == 200
-        assert response.json == {
-            'status': 'ok',
-            'uuid': expected_filename,
-        }
 
     def test_post_ok(self):
         self.check_ok_request({})
@@ -97,9 +97,6 @@ class TestImageView(unittest.TestCase):
 
     def test_post_ok_json_with_some_key(self):
         self.check_ok_request({'foo': 'bar'}, make_json=True, _base64=True)
-
-    def test_post_ok_with_filename(self):
-        self.check_ok_request({}, filename_in_address='filename')
 
     def test_post_ok_with_filename_in_form(self):
         self.check_ok_request({}, filename_in_form='filename')
