@@ -70,13 +70,7 @@ class ImageView(MethodView):
         if len(file_content) == 0:
             self.abort(400, error='Empty file')
 
-        data = dict(
-            data=dict(self.form_values),
-            mimetype=file.mimetype,
-            content_length=len(file_content),
-        )
-
-        return file_content, data
+        return file_content, file.mimetype
 
     def _process_base64(self):
         encoded = self.form_values['base64']
@@ -84,13 +78,7 @@ class ImageView(MethodView):
 
         del self.form_values['base64']
 
-        data = dict(
-            data=self.form_values,
-            mimetype='image/jpeg',
-            content_length=len(file_content),
-        )
-
-        return file_content, data
+        return file_content, 'image/jpeg'
 
     @cached_property
     def form_values(self):
@@ -106,14 +94,20 @@ class ImageView(MethodView):
         self.check_auth()
 
         if 'file' in request.files:
-            file_content, data = self._process_file()
+            file_content, mimetype = self._process_file()
         elif self.form_values.get('base64'):
-            file_content, data = self._process_base64()
+            file_content, mimetype = self._process_base64()
         else:
             self.abort(400, error='No file')
 
         filename = self.generate_filename()
         logging.debug('Saving with uuid: {}'.format(filename))
+
+        data = dict(
+            data=self.form_values,
+            mimetype=mimetype,
+            content_length=len(file_content),
+        )
 
         self.storage_manager.save_image(
             filename,
