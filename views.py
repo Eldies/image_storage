@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+from itertools import chain
 import json
 import logging
 from functools import cached_property
@@ -51,7 +52,8 @@ class ImageView(MethodView):
     def storage_manager(self):
         return StorageManager()
 
-    def generate_filename(self, suggested_filename):
+    def generate_filename(self):
+        suggested_filename = self.form_values.get('filename') or self.form_values.get('file_name')
         return '{}-{}'.format(
             suggested_filename or base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5],
             base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2],
@@ -69,51 +71,48 @@ class ImageView(MethodView):
             self.abort(400, error='Empty file')
 
         data = dict(
-            data=dict(request.form),
+            data=dict(self.form_values),
             mimetype=file.mimetype,
             content_length=len(file_content),
         )
 
         return file_content, data
 
-    def _process_base64(self, form_data):
-        encoded = form_data['base64']
+    def _process_base64(self):
+        encoded = self.form_values['base64']
         file_content = base64.b64decode(encoded)
 
-        del form_data['base64']
+        del self.form_values['base64']
 
         data = dict(
-            data=form_data,
+            data=self.form_values,
             mimetype='image/jpeg',
             content_length=len(file_content),
         )
 
         return file_content, data
 
-    def get_filename_from_form(self):
-        for key in request.form:
-            if key.lower() in ['filename', 'file_name']:
-                return request.form[key]
-        try:
-            for key in request.json:
-                if key.lower() in ['filename', 'file_name']:
-                    return request.json[key]
-        except:
-            pass
+    @cached_property
+    def form_values(self):
+        return {
+            key.lower(): value
+            for key, value in chain(
+                request.form.items(),
+                request.json.items() if request.is_json else [],
+            )
+        }
 
     def post(self):
         self.check_auth()
 
         if 'file' in request.files:
             file_content, data = self._process_file()
-        elif request.form.get('base64'):
-            file_content, data = self._process_base64(dict(request.form))
-        elif request.is_json and request.json.get('base64'):
-            file_content, data = self._process_base64(request.json)
+        elif self.form_values.get('base64'):
+            file_content, data = self._process_base64()
         else:
             self.abort(400, error='No file')
 
-        filename = self.generate_filename(self.get_filename_from_form())
+        filename = self.generate_filename()
         logging.debug('Saving with uuid: {}'.format(filename))
 
         self.storage_manager.save_image(
