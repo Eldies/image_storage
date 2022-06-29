@@ -4,3 +4,5 @@
 venv
 Dockerfile
 uploads
+coverage_html_report
+.idea
