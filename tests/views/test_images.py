@@ -2,21 +2,21 @@
 import base64
 import io
 import json
-import logging
-import unittest
 import uuid
+
+import pytest
+import unittest
 from unittest.mock import Mock, patch
 
-from app import app
 from storage_manager import StorageManager
 
 
 class TestImageView(unittest.TestCase):
-    def setUp(self):
-        app.logger.setLevel(logging.DEBUG)
-        app.config['TESTING'] = True
-        self.client = app.test_client()
+    @pytest.fixture(autouse=True)
+    def _setup(self, client):
+        self.client = client
 
+    def setUp(self):
         self.image_storage_mock = Mock(spec=StorageManager)
         self.image_storage_mock.return_value.uuid_exists.return_value = False
         self.uuid_mock = Mock(

@@ -6,9 +6,11 @@ import settings
 import views
 
 
-def create_app():
-
+def create_app(test_config: dict = None):
     app = Flask(__name__)
+
+    if test_config is not None:
+        app.config.update(test_config)
 
     app.add_url_rule('/ping', view_func=views.ping)
 
@@ -18,6 +20,3 @@ def create_app():
     dictConfig(settings.LOGGING_CONFIG)
 
     return app
-
-
-app = create_app()
