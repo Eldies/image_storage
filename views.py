@@ -12,6 +12,7 @@ from flask import (
     jsonify,
     make_response,
     request,
+    Response,
     send_file,
 )
 from flask.views import MethodView
@@ -28,7 +29,7 @@ def ping():
 
 
 class ImageView(MethodView):
-    def abort(self, status_code, error):
+    def abort(self, status_code: int, error: str) -> None:
         abort(make_response(
             jsonify(
                 error=error,
@@ -49,10 +50,10 @@ class ImageView(MethodView):
             self.abort(403, error='Invalid api key')
 
     @cached_property
-    def storage_manager(self):
+    def storage_manager(self) -> StorageManager:
         return StorageManager()
 
-    def generate_filename(self):
+    def generate_filename(self) -> str:
         suggested_filename = self.form_values.get('filename') or self.form_values.get('file_name')
         return '{}-{}'.format(
             suggested_filename or base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5],
@@ -81,7 +82,7 @@ class ImageView(MethodView):
         return file_content, 'image/jpeg'
 
     @cached_property
-    def form_values(self):
+    def form_values(self) -> dict:
         return {
             key.lower(): value
             for key, value in chain(
@@ -90,7 +91,7 @@ class ImageView(MethodView):
             )
         }
 
-    def post(self):
+    def post(self) -> Response:
         self.check_auth()
 
         if 'file' in request.files:
@@ -119,7 +120,7 @@ class ImageView(MethodView):
             uuid=filename,
         ))
 
-    def get(self, uuid):
+    def get(self, uuid: str) -> Response:
         if not self.storage_manager.uuid_exists(uuid):
             self.abort(404, 'Not Found')
         return send_file(

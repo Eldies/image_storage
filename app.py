@@ -6,7 +6,7 @@ import settings
 import views
 
 
-def create_app(test_config: dict = None):
+def create_app(test_config: dict = None) -> Flask:
     app = Flask(__name__)
 
     if test_config is not None:
