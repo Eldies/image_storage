@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from auth import (
     check_api_key,

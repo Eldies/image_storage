@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 import os
-from parameterized import parameterized
-import unittest
+
+import pytest
 from unittest.mock import patch, mock_open, Mock
 
 import settings
 from storage_manager import StorageManager
 
 
-class TestStorageManager(unittest.TestCase):
-    def setUp(self):
+class TestStorageManager:
+    @pytest.fixture(autouse=True)
+    def _setup(self):
         self.manager = StorageManager()
 
         self.open_mock = mock_open()
@@ -25,7 +26,8 @@ class TestStorageManager(unittest.TestCase):
         for p in self.patches:
             p.start()
 
-    def tearDown(self):
+        yield
+
         for p in self.patches:
             p.stop()
 
@@ -53,7 +55,7 @@ class TestStorageManager(unittest.TestCase):
         self.manager.save_image('some_uuid', b'abcdef')
         self.check_save('some_uuid')
 
-    @parameterized.expand([(True,), (False,)])
+    @pytest.mark.parametrize('exists', [True, False])
     def test_exists(self, exists):
         self.exists_mock.return_value = exists
         assert self.manager.uuid_exists('some_uuid') == exists

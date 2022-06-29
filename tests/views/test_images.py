@@ -5,18 +5,16 @@ import json
 import uuid
 
 import pytest
-import unittest
 from unittest.mock import Mock, patch
 
 from storage_manager import StorageManager
 
 
-class TestImageView(unittest.TestCase):
+class TestImageView:
     @pytest.fixture(autouse=True)
     def _setup(self, client):
         self.client = client
 
-    def setUp(self):
         self.image_storage_mock = Mock(spec=StorageManager)
         self.image_storage_mock.return_value.uuid_exists.return_value = False
         self.uuid_mock = Mock(
@@ -32,7 +30,8 @@ class TestImageView(unittest.TestCase):
         for p in self.patches:
             p.start()
 
-    def tearDown(self):
+        yield
+
         for p in self.patches:
             p.stop()
 
