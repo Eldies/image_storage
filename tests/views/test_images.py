@@ -7,7 +7,7 @@ import uuid
 import pytest
 from unittest.mock import Mock, patch
 
-from storage_manager import StorageManager
+from app.storage_manager import StorageManager
 
 
 class TestImageView:
@@ -23,9 +23,9 @@ class TestImageView:
         )
 
         self.patches = [
-            patch('settings.CLIENT_API_KEY', 'TEST_API_KEY'),
-            patch('views.StorageManager', self.image_storage_mock),
-            patch('views.uuid', self.uuid_mock),
+            patch('app.settings.CLIENT_API_KEY', 'TEST_API_KEY'),
+            patch('app.views.StorageManager', self.image_storage_mock),
+            patch('app.views.uuid', self.uuid_mock),
         ]
         for p in self.patches:
             p.start()

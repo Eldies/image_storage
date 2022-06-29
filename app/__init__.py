@@ -2,8 +2,10 @@
 from flask import Flask
 from logging.config import dictConfig
 
-import settings
-import views
+from . import (
+    settings,
+    views,
+)
 
 
 def create_app(test_config: dict = None) -> Flask:

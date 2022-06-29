@@ -2,7 +2,7 @@
 import os
 from typing import BinaryIO
 
-import settings
+from . import settings
 
 
 class StorageManager(object):

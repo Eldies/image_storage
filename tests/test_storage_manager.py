@@ -4,8 +4,8 @@ import os
 import pytest
 from unittest.mock import patch, mock_open, Mock
 
-import settings
-from storage_manager import StorageManager
+from app import settings
+from app.storage_manager import StorageManager
 
 
 class TestStorageManager:
@@ -19,9 +19,9 @@ class TestStorageManager:
 
         self.patches = [
             patch("builtins.open", self.open_mock),
-            patch("storage_manager.os.makedirs", self.makedirs_mock),
-            patch("storage_manager.os.path.exists", self.exists_mock),
-            patch('settings.UPLOAD_FOLDER', 'some_path'),
+            patch("app.storage_manager.os.makedirs", self.makedirs_mock),
+            patch("app.storage_manager.os.path.exists", self.exists_mock),
+            patch('app.settings.UPLOAD_FOLDER', 'some_path'),
         ]
         for p in self.patches:
             p.start()
@@ -60,7 +60,7 @@ class TestStorageManager:
         self.exists_mock.return_value = exists
         assert self.manager.uuid_exists('some_uuid') == exists
         assert self.exists_mock.call_count == 1
-        assert self.exists_mock.call_args.args == (os.path.join(settings.UPLOAD_FOLDER, 'some_uuid'), )
+        assert self.exists_mock.call_args.args == (os.path.join(settings.UPLOAD_FOLDER, 'some_uuid'),)
 
     def test_read_data(self):
         self.open_mock.return_value.__enter__.return_value.read.return_value = 'READ DATA'

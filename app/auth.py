@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-import settings
+from . import settings
 
 
 class InvalidApiKey(ValueError):

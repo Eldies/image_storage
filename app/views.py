@@ -17,11 +17,11 @@ from flask import (
 )
 from flask.views import MethodView
 
-from auth import (
+from .auth import (
     check_api_key,
     InvalidApiKey,
 )
-from storage_manager import StorageManager
+from .storage_manager import StorageManager
 
 
 def ping():
