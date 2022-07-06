@@ -2,37 +2,15 @@
 import base64
 import io
 import json
-import uuid
 
 import pytest
-from unittest.mock import Mock, patch
-
-from app.storage_manager import StorageManager
 
 
 class TestImageView:
     @pytest.fixture(autouse=True)
-    def _setup(self, client, settings):
+    def _setup(self, client, environment):
         self.client = client
-
-        self.image_storage_mock = Mock(spec=StorageManager)
-        self.image_storage_mock.return_value.uuid_exists.return_value = False
-        self.uuid_mock = Mock(
-            uuid1=Mock(return_value=uuid.UUID(bytes=b'0987654321098765')),
-            uuid4=Mock(return_value=uuid.UUID(bytes=b'1234567890123456')),
-        )
-
-        self.patches = [
-            patch('app.views.StorageManager', self.image_storage_mock),
-            patch('app.views.uuid', self.uuid_mock),
-        ]
-        for p in self.patches:
-            p.start()
-
-        yield
-
-        for p in self.patches:
-            p.stop()
+        self.env = environment
 
     def test_post_no_api_key(self):
         response = self.client.post('/v1/image/')
@@ -70,9 +48,9 @@ class TestImageView:
             'status': 'ok',
             'uuid': expected_filename,
         }
-        assert self.image_storage_mock.call_count == 1
-        assert self.image_storage_mock.return_value.save_image.call_count == 1
-        save_image_call_args = self.image_storage_mock.return_value.save_image.call_args.args
+        assert self.env.image_storage_mock.call_count == 1
+        assert self.env.image_storage_mock.return_value.save_image.call_count == 1
+        save_image_call_args = self.env.image_storage_mock.return_value.save_image.call_args.args
         assert save_image_call_args[0] == expected_filename
         assert save_image_call_args[1] == b'abcdef'
         assert json.loads(save_image_call_args[2]) == dict(
@@ -132,9 +110,9 @@ class TestImageView:
         assert response.json == {'status': 'error', 'error': 'Empty file'}
 
     def test_get_ok(self):
-        self.image_storage_mock.return_value.uuid_exists.return_value = True
-        self.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
-        self.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
+        self.env.image_storage_mock.return_value.uuid_exists.return_value = True
+        self.env.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
+        self.env.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
         response = self.client.get('/v1/image/some_uuid')
         assert response.status_code == 200
         assert response.content_type == 'image/jpeg'

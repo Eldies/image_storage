@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
+import uuid
+
 from flask import Flask
 from flask.testing import FlaskClient
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import (
+    Mock,
+    patch,
+)
 
 from app import create_app
 from app.settings import ClientInfo
+from app.storage_manager import StorageManager
 
 
 @pytest.fixture()
@@ -25,7 +31,7 @@ def settings() -> None:
 
 
 @pytest.fixture()
-def app() -> Flask:
+def app(settings) -> Flask:
     app = create_app({
         'TESTING': True,
     })
@@ -36,3 +42,33 @@ def app() -> Flask:
 @pytest.fixture()
 def client(app: Flask) -> FlaskClient:
     return app.test_client()
+
+
+class Environment:
+    def __init__(self):
+        self.image_storage_mock = Mock(spec=StorageManager)
+        self.image_storage_mock.return_value.uuid_exists.return_value = False
+        self.uuid_mock = Mock(
+            uuid1=Mock(return_value=uuid.UUID(bytes=b'0987654321098765')),
+            uuid4=Mock(return_value=uuid.UUID(bytes=b'1234567890123456')),
+        )
+
+        self.patches = [
+            patch('app.views.StorageManager', self.image_storage_mock),
+            patch('app.views.uuid', self.uuid_mock),
+        ]
+
+    def __enter__(self):
+        for p in self.patches:
+            p.start()
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        for p in self.patches:
+            p.stop()
+
+
+@pytest.fixture()
+def environment() -> Environment:
+    env = Environment()
+    with env:
+        yield env
