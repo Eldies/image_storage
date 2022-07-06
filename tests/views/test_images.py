@@ -7,6 +7,7 @@ import uuid
 import pytest
 from unittest.mock import Mock, patch
 
+from app.settings import ClientInfo
 from app.storage_manager import StorageManager
 
 
@@ -23,7 +24,7 @@ class TestImageView:
         )
 
         self.patches = [
-            patch('app.settings.CLIENT_API_KEY', 'TEST_API_KEY'),
+            patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]),
             patch('app.views.StorageManager', self.image_storage_mock),
             patch('app.views.uuid', self.uuid_mock),
         ]
@@ -42,8 +43,8 @@ class TestImageView:
 
     def test_post_wrong_api_key(self):
         response = self.client.post('/v1/image/', headers={'X-API-KEY': 'random_string'})
-        assert response.status_code == 403
-        assert response.json == {'status': 'error', 'error': 'Invalid api key'}
+        assert response.status_code == 401
+        assert response.json == {'status': 'error', 'error': 'Unauthorized'}
 
     def test_post_no_file(self):
         response = self.client.post('/v1/image/', headers={'X-API-KEY': 'TEST_API_KEY'})

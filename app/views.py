@@ -17,10 +17,8 @@ from flask import (
 )
 from flask.views import MethodView
 
-from .auth import (
-    check_api_key,
-    InvalidApiKey,
-)
+from .auth import get_client_info_by_api_key
+from .settings import ClientInfo
 from .storage_manager import StorageManager
 
 
@@ -38,16 +36,15 @@ class ImageView(MethodView):
             status_code,
         ))
 
-    def check_auth(self):
+    def get_client(self) -> ClientInfo:
         api_key = request.headers.get('X-API-KEY')
         logging.debug('Provided api_key: "{}"'.format(api_key))
-        if api_key is None:
-            self.abort(401, 'Unauthorized')
+        if api_key is not None:
+            return get_client_info_by_api_key(api_key)
 
-        try:
-            check_api_key(api_key)
-        except InvalidApiKey:
-            self.abort(403, error='Invalid api key')
+    def check_auth(self):
+        if self.get_client() is None:
+            self.abort(401, 'Unauthorized')
 
     @cached_property
     def storage_manager(self) -> StorageManager:

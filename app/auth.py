@@ -2,10 +2,7 @@
 from . import settings
 
 
-class InvalidApiKey(ValueError):
-    pass
-
-
-def check_api_key(api_key: str) -> None:
-    if api_key != settings.CLIENT_API_KEY:
-        raise InvalidApiKey()
+def get_client_info_by_api_key(api_key: str) -> settings.ClientInfo | None:
+    for client in settings.CLIENTS_INFO:
+        if api_key == client.api_key:
+            return client
