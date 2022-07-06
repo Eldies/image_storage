@@ -27,15 +27,6 @@ def ping():
 
 
 class ImageView(MethodView):
-    def abort(self, status_code: int, error: str) -> None:
-        abort(make_response(
-            jsonify(
-                error=error,
-                status='error',
-            ),
-            status_code,
-        ))
-
     def get_client(self) -> ClientInfo:
         api_key = request.headers.get('X-API-KEY')
         logging.debug('Provided api_key: "{}"'.format(api_key))
@@ -44,7 +35,7 @@ class ImageView(MethodView):
 
     def check_auth(self):
         if self.get_client() is None:
-            self.abort(401, 'Unauthorized')
+            abort(401, 'Unauthorized')
 
     @cached_property
     def storage_manager(self) -> StorageManager:
@@ -66,7 +57,7 @@ class ImageView(MethodView):
         file_content = stream.read()
 
         if len(file_content) == 0:
-            self.abort(400, error='Empty file')
+            abort(400, 'Empty file')
 
         return file_content, file.mimetype
 
@@ -96,7 +87,7 @@ class ImageView(MethodView):
         elif self.form_values.get('base64'):
             file_content, mimetype = self._process_base64()
         else:
-            self.abort(400, error='No file')
+            abort(400, 'No file')
 
         filename = self.generate_filename()
         logging.debug('Saving with uuid: {}'.format(filename))
@@ -119,7 +110,7 @@ class ImageView(MethodView):
 
     def get(self, uuid: str) -> Response:
         if not self.storage_manager.uuid_exists(uuid):
-            self.abort(404, 'Not Found')
+            abort(404, 'Not Found')
         return send_file(
             self.storage_manager.read_file(uuid),
             mimetype=json.loads(self.storage_manager.read_data(uuid)).get('mimetype'),

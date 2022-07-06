@@ -1,11 +1,21 @@
 # -*- coding: utf-8 -*-
-from flask import Flask
+from flask import (
+    Flask,
+    jsonify,
+    Response,
+)
 from logging.config import dictConfig
+
+from werkzeug.exceptions import HTTPException
 
 from . import (
     settings,
     views,
 )
+
+
+def error_handler(error: HTTPException) -> (Response, int):
+    return jsonify(dict(status='error', error=error.description)), error.code
 
 
 def create_app(test_config: dict = None) -> Flask:
@@ -18,6 +28,10 @@ def create_app(test_config: dict = None) -> Flask:
 
     app.add_url_rule('/v1/image/', view_func=views.ImageView.as_view('image_post'), methods=['POST'])
     app.add_url_rule('/v1/image/<uuid>', view_func=views.ImageView.as_view('image_get'), methods=['GET'])
+
+    app.register_error_handler(400, error_handler)
+    app.register_error_handler(401, error_handler)
+    app.register_error_handler(404, error_handler)
 
     dictConfig(settings.LOGGING_CONFIG)
 
