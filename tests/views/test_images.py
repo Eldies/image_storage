@@ -7,13 +7,12 @@ import uuid
 import pytest
 from unittest.mock import Mock, patch
 
-from app.settings import ClientInfo
 from app.storage_manager import StorageManager
 
 
 class TestImageView:
     @pytest.fixture(autouse=True)
-    def _setup(self, client):
+    def _setup(self, client, settings):
         self.client = client
 
         self.image_storage_mock = Mock(spec=StorageManager)
@@ -24,7 +23,6 @@ class TestImageView:
         )
 
         self.patches = [
-            patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]),
             patch('app.views.StorageManager', self.image_storage_mock),
             patch('app.views.uuid', self.uuid_mock),
         ]

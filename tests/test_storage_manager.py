@@ -4,13 +4,12 @@ import os
 import pytest
 from unittest.mock import patch, mock_open, Mock
 
-from app import settings
 from app.storage_manager import StorageManager
 
 
 class TestStorageManager:
     @pytest.fixture(autouse=True)
-    def _setup(self):
+    def _setup(self, settings):
         self.manager = StorageManager()
 
         self.open_mock = mock_open()
@@ -21,7 +20,6 @@ class TestStorageManager:
             patch("builtins.open", self.open_mock),
             patch("app.storage_manager.os.makedirs", self.makedirs_mock),
             patch("app.storage_manager.os.path.exists", self.exists_mock),
-            patch('app.settings.UPLOAD_FOLDER', 'some_path'),
         ]
         for p in self.patches:
             p.start()
@@ -32,7 +30,7 @@ class TestStorageManager:
             p.stop()
 
     def check_save(self, uuid, data=None):
-        folder = os.path.join(settings.UPLOAD_FOLDER, uuid)
+        folder = os.path.join('test_upload_path', uuid)
         file_path = os.path.join(folder, 'file')
         data_path = os.path.join(folder, 'data')
 
@@ -60,14 +58,14 @@ class TestStorageManager:
         self.exists_mock.return_value = exists
         assert self.manager.uuid_exists('some_uuid') == exists
         assert self.exists_mock.call_count == 1
-        assert self.exists_mock.call_args.args == (os.path.join(settings.UPLOAD_FOLDER, 'some_uuid'),)
+        assert self.exists_mock.call_args.args == (os.path.join('test_upload_path', 'some_uuid'),)
 
     def test_read_data(self):
         self.open_mock.return_value.__enter__.return_value.read.return_value = 'READ DATA'
 
         assert self.manager.read_data('some_uuid') == 'READ DATA'
 
-        folder = os.path.join(settings.UPLOAD_FOLDER, 'some_uuid')
+        folder = os.path.join('test_upload_path', 'some_uuid')
         data_path = os.path.join(folder, 'data')
 
         assert self.open_mock.call_args.args == (data_path, 'r')
@@ -75,6 +73,6 @@ class TestStorageManager:
     def test_read_file(self):
         self.manager.read_file('some_uuid')
 
-        folder = os.path.join(settings.UPLOAD_FOLDER, 'some_uuid')
+        folder = os.path.join('test_upload_path', 'some_uuid')
         file_path = os.path.join(folder, 'file')
         assert self.open_mock.call_args.args == (file_path, 'rb')

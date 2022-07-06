@@ -1,18 +1,19 @@
 # -*- coding: utf-8 -*-
-from unittest.mock import patch
+import pytest
 
 from app.auth import get_client_info_by_api_key
-from app.settings import ClientInfo
 
 
 class TestGetUserIdFromToken:
+    @pytest.fixture(autouse=True)
+    def _setup(self, settings):
+        pass
+
     def test_ok(self):
-        with patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]):
-            client = get_client_info_by_api_key('TEST_API_KEY')
-            assert client.id == 'test_client'
-            assert client.api_key == 'TEST_API_KEY'
+        client = get_client_info_by_api_key('TEST_API_KEY')
+        assert client.id == 'test_client'
+        assert client.api_key == 'TEST_API_KEY'
 
     def test_wrong_api_key(self):
-        with patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]):
-            client = get_client_info_by_api_key('random_string')
-            assert client is None
+        client = get_client_info_by_api_key('random_string')
+        assert client is None
