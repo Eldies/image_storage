@@ -9,7 +9,7 @@ from app.storage_manager import StorageManager
 
 class TestStorageManager:
     @pytest.fixture(autouse=True)
-    def _setup(self, settings):
+    def _setup(self):
         self.manager = StorageManager()
 
         self.open_mock = mock_open()

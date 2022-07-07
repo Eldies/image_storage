@@ -1,14 +1,8 @@
 # -*- coding: utf-8 -*-
-import pytest
-
 from app.logic import get_client_info_by_api_key
 
 
-class TestGetUserIdFromToken:
-    @pytest.fixture(autouse=True)
-    def _setup(self, settings):
-        pass
-
+class TestGetClientInfoByApiKey:
     def test_ok(self):
         client = get_client_info_by_api_key('TEST_API_KEY')
         assert client.id == 'test_client'

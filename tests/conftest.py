@@ -15,7 +15,7 @@ from app.storage_manager import StorageManager
 from app.types import ClientInfo
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def settings() -> None:
     patches = [
         patch('app.settings.UPLOAD_FOLDER', 'test_upload_path'),
@@ -31,7 +31,7 @@ def settings() -> None:
 
 
 @pytest.fixture()
-def app(settings) -> Flask:
+def app() -> Flask:
     app = create_app({
         'TESTING': True,
     })
@@ -55,7 +55,7 @@ class Environment:
 
         self.patches = [
             patch('app.views.StorageManager', self.image_storage_mock),
-            patch('app.views.uuid', self.uuid_mock),
+            patch('app.logic.uuid', self.uuid_mock),
         ]
 
     def __enter__(self):

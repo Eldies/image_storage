@@ -4,7 +4,6 @@ from itertools import chain
 import json
 import logging
 from functools import cached_property
-import uuid
 from io import BytesIO
 
 from flask import (
@@ -16,7 +15,10 @@ from flask import (
 )
 from flask.views import MethodView
 
-from .logic import get_client_info_by_api_key
+from .logic import (
+    get_client_info_by_api_key,
+    generate_image_uuid,
+)
 from .storage_manager import StorageManager
 from .types import ClientInfo
 
@@ -39,13 +41,6 @@ class ImageView(MethodView):
     @cached_property
     def storage_manager(self) -> StorageManager:
         return StorageManager()
-
-    def generate_filename(self) -> str:
-        suggested_filename = self.form_values.get('filename') or self.form_values.get('file_name')
-        return '{}-{}'.format(
-            suggested_filename or base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5],
-            base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2],
-        )
 
     def _process_file(self):
         file = request.files.get('file')
@@ -88,7 +83,7 @@ class ImageView(MethodView):
         else:
             abort(400, 'No file')
 
-        filename = self.generate_filename()
+        filename = generate_image_uuid(self.form_values.get('filename') or self.form_values.get('file_name'))
         logging.debug('Saving with uuid: {}'.format(filename))
 
         data = dict(
