@@ -76,3 +76,10 @@ class TestStorageManager:
         folder = os.path.join('test_upload_path', 'some_uuid')
         file_path = os.path.join(folder, 'file')
         assert self.open_mock.call_args.args == (file_path, 'rb')
+
+    def test_path_for_uuid(self):
+        assert self.manager.path_for_uuid('foo') == 'test_upload_path{}foo'.format(os.sep)
+
+    def test_path_for_uuid_with_sep(self):
+        path = self.manager.path_for_uuid('foo{}bar'.format(os.sep))
+        assert path == 'test_upload_path{sep}foo{sep}bar'.format(sep=os.sep)

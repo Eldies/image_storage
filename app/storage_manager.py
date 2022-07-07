@@ -7,7 +7,8 @@ from . import settings
 
 class StorageManager(object):
     def path_for_uuid(self, uuid: str) -> str:
-        return os.path.join(settings.UPLOAD_FOLDER, uuid)
+        uuid = uuid.split(os.sep)
+        return os.path.join(settings.UPLOAD_FOLDER, *uuid)
 
     def uuid_exists(self, uuid: str) -> bool:
         return os.path.exists(self.path_for_uuid(uuid))
