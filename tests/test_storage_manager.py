@@ -46,24 +46,24 @@ class TestStorageManager:
             assert self.open_mock.return_value.__enter__.return_value.write.call_args_list[1].args == (data,)
 
     def test_save_image_ok(self):
-        self.manager.save_image('some_uuid', b'abcdef', 'some_data')
+        self.manager.save_image(['some_uuid'], b'abcdef', 'some_data')
         self.check_save('some_uuid', 'some_data')
 
     def test_save_image_no_data_ok(self):
-        self.manager.save_image('some_uuid', b'abcdef')
+        self.manager.save_image(['some_uuid'], b'abcdef')
         self.check_save('some_uuid')
 
     @pytest.mark.parametrize('exists', [True, False])
     def test_exists(self, exists):
         self.exists_mock.return_value = exists
-        assert self.manager.uuid_exists('some_uuid') == exists
+        assert self.manager.uuid_exists(['some_uuid']) == exists
         assert self.exists_mock.call_count == 1
         assert self.exists_mock.call_args.args == (os.path.join('test_upload_path', 'some_uuid'),)
 
     def test_read_data(self):
         self.open_mock.return_value.__enter__.return_value.read.return_value = 'READ DATA'
 
-        assert self.manager.read_data('some_uuid') == 'READ DATA'
+        assert self.manager.read_data(['some_uuid']) == 'READ DATA'
 
         folder = os.path.join('test_upload_path', 'some_uuid')
         data_path = os.path.join(folder, 'data')
@@ -71,15 +71,15 @@ class TestStorageManager:
         assert self.open_mock.call_args.args == (data_path, 'r')
 
     def test_read_file(self):
-        self.manager.read_file('some_uuid')
+        self.manager.read_file(['some_uuid'])
 
         folder = os.path.join('test_upload_path', 'some_uuid')
         file_path = os.path.join(folder, 'file')
         assert self.open_mock.call_args.args == (file_path, 'rb')
 
     def test_path_for_uuid(self):
-        assert self.manager.path_for_uuid('foo') == 'test_upload_path{}foo'.format(os.sep)
+        assert self.manager.path_for_uuid(['foo']) == 'test_upload_path{}foo'.format(os.sep)
 
     def test_path_for_uuid_with_sep(self):
-        path = self.manager.path_for_uuid('foo{}bar'.format(os.sep))
+        path = self.manager.path_for_uuid(['foo', 'bar'])
         assert path == 'test_upload_path{sep}foo{sep}bar'.format(sep=os.sep)

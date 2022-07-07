@@ -51,7 +51,7 @@ class TestImageView:
         assert self.env.image_storage_mock.call_count == 1
         assert self.env.image_storage_mock.return_value.save_image.call_count == 1
         save_image_call_args = self.env.image_storage_mock.return_value.save_image.call_args.args
-        assert save_image_call_args[0] == expected_filename
+        assert save_image_call_args[0] == [expected_filename]
         assert save_image_call_args[1] == b'abcdef'
         assert json.loads(save_image_call_args[2]) == dict(
             data=additional_data,
@@ -117,6 +117,17 @@ class TestImageView:
         assert response.status_code == 200
         assert response.content_type == 'image/jpeg'
         assert response.data == b'abcdef'
+        assert self.env.image_storage_mock.return_value.read_file.call_args.args[0] == ['some_uuid']
+
+    def test_get_ok_with_client_id(self):
+        self.env.image_storage_mock.return_value.uuid_exists.return_value = True
+        self.env.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
+        self.env.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
+        response = self.client.get('/v1/image/some_client_id/some_uuid')
+        assert response.status_code == 200
+        assert response.content_type == 'image/jpeg'
+        assert response.data == b'abcdef'
+        assert self.env.image_storage_mock.return_value.read_file.call_args.args[0] == ['some_client_id', 'some_uuid']
 
     def test_get_unknown_uuid(self):
         response = self.client.get('/v1/image/some_uuid')

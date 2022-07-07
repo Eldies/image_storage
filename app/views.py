@@ -98,7 +98,7 @@ class ImageView(MethodView):
         )
 
         self.storage_manager.save_image(
-            filename,
+            [filename],
             file_content,
             json.dumps(data),
         )
@@ -107,7 +107,8 @@ class ImageView(MethodView):
             uuid=filename,
         ))
 
-    def get(self, uuid: str) -> Response:
+    def get(self, uuid: str, client_id: str = None) -> Response:
+        uuid = ([client_id] if client_id else []) + [uuid]
         if not self.storage_manager.uuid_exists(uuid):
             abort(404, 'Not Found')
         return send_file(
