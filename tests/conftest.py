@@ -44,18 +44,25 @@ def client(app: Flask) -> FlaskClient:
     return app.test_client()
 
 
+@pytest.fixture()
+def uuid_mock() -> Mock:
+    uuid_mock = Mock(
+        uuid1=Mock(return_value=uuid.UUID(bytes=b'0987654321098765')),
+        uuid4=Mock(return_value=uuid.UUID(bytes=b'1234567890123456')),
+    )
+    with patch('app.logic.uuid', uuid_mock):
+        yield uuid_mock
+
+
 class Environment:
-    def __init__(self):
+    def __init__(self, uuid_mock):
+        self.uuid_mock = uuid_mock
+
         self.image_storage_mock = Mock(spec=StorageManager)
         self.image_storage_mock.return_value.uuid_exists.return_value = False
-        self.uuid_mock = Mock(
-            uuid1=Mock(return_value=uuid.UUID(bytes=b'0987654321098765')),
-            uuid4=Mock(return_value=uuid.UUID(bytes=b'1234567890123456')),
-        )
 
         self.patches = [
             patch('app.views.StorageManager', self.image_storage_mock),
-            patch('app.logic.uuid', self.uuid_mock),
         ]
 
     def __enter__(self):
@@ -68,7 +75,9 @@ class Environment:
 
 
 @pytest.fixture()
-def environment() -> Environment:
-    env = Environment()
+def environment(uuid_mock: Mock) -> Environment:
+    env = Environment(
+        uuid_mock=uuid_mock,
+    )
     with env:
         yield env

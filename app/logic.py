@@ -12,7 +12,7 @@ def get_client_info_by_api_key(api_key: str) -> ClientInfo | None:
             return client
 
 
-def generate_image_uuid(suggested_filename: str) -> str:
+def generate_image_uuid(suggested_filename: str | None) -> str:
     return '{}-{}'.format(
         suggested_filename or base64.urlsafe_b64encode(uuid.uuid4().bytes).decode("utf-8")[:5],
         base64.urlsafe_b64encode(uuid.uuid1().bytes).decode("utf-8")[:-2],
