@@ -1,12 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
-from dataclasses import dataclass
 
-
-@dataclass
-class ClientInfo:
-    id: str
-    api_key: str
+from .types import ClientInfo
 
 
 UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER')

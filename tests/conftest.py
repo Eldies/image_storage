@@ -11,8 +11,8 @@ from unittest.mock import (
 )
 
 from app import create_app
-from app.settings import ClientInfo
 from app.storage_manager import StorageManager
+from app.types import ClientInfo
 
 
 @pytest.fixture()

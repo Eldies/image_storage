@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
-from app.auth import get_client_info_by_api_key
+from app.logic import get_client_info_by_api_key
 
 
 class TestGetUserIdFromToken:

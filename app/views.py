@@ -16,9 +16,9 @@ from flask import (
 )
 from flask.views import MethodView
 
-from .auth import get_client_info_by_api_key
-from .settings import ClientInfo
+from .logic import get_client_info_by_api_key
 from .storage_manager import StorageManager
+from .types import ClientInfo
 
 
 def ping():
