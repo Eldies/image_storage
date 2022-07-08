@@ -43,45 +43,37 @@ def client(app: Flask) -> FlaskClient:
 
 
 @pytest.fixture()
-def random_choice_mock() -> None:
+def random_choice_mock() -> Mock:
     mock = Mock(return_value='a')
     with patch('random.choice', mock):
         yield mock
 
 
 @pytest.fixture()
-def time_mock() -> None:
+def time_mock() -> Mock:
     mock = Mock(return_value=1657234419.0)
     with patch('time.time', mock):
         yield mock
 
 
-class Environment:
-    def __init__(self, time_mock, random_choice_mock):
-        self.time_mock = time_mock
-        self.random_choice_mock = random_choice_mock
-
-        self.image_storage_mock = Mock(spec=StorageManager)
-        self.image_storage_mock.return_value.uuid_exists.return_value = False
-
-        self.patches = [
-            patch('app.views.StorageManager', self.image_storage_mock),
-        ]
-
-    def __enter__(self):
-        for p in self.patches:
-            p.start()
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        for p in self.patches:
-            p.stop()
+@pytest.fixture()
+def image_storage_mock() -> Mock:
+    mock = Mock(spec=StorageManager)
+    mock.return_value.uuid_exists.return_value = False
+    with patch('app.views.StorageManager', mock):
+        yield mock
 
 
 @pytest.fixture()
-def environment(time_mock: Mock, random_choice_mock: Mock) -> Environment:
-    env = Environment(
-        time_mock=time_mock,
-        random_choice_mock=random_choice_mock,
-    )
-    with env:
-        yield env
+def environment(
+        time_mock,
+        random_choice_mock,
+        image_storage_mock,
+):
+    class Environment:
+        def __init__(self):
+            self.time_mock = time_mock
+            self.random_choice_mock = random_choice_mock
+            self.image_storage_mock = image_storage_mock
+
+    return Environment()
