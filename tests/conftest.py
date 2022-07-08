@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import uuid
-
 from flask import Flask
 from flask.testing import FlaskClient
 
@@ -45,25 +43,23 @@ def client(app: Flask) -> FlaskClient:
 
 
 @pytest.fixture()
-def uuid_mock() -> Mock:
-    uuid_mock = Mock(
-        uuid4=Mock(return_value=uuid.UUID(bytes=b'1234567890123456')),
-    )
-    with patch('app.logic.uuid', uuid_mock):
-        yield uuid_mock
+def random_choice_mock() -> None:
+    mock = Mock(return_value='a')
+    with patch('random.choice', mock):
+        yield mock
 
 
 @pytest.fixture()
 def time_mock() -> None:
-    time_mock = Mock(return_value=1657234419.0)
-    with patch('time.time', time_mock):
-        yield time_mock
+    mock = Mock(return_value=1657234419.0)
+    with patch('time.time', mock):
+        yield mock
 
 
 class Environment:
-    def __init__(self, uuid_mock, time_mock):
-        self.uuid_mock = uuid_mock
+    def __init__(self, time_mock, random_choice_mock):
         self.time_mock = time_mock
+        self.random_choice_mock = random_choice_mock
 
         self.image_storage_mock = Mock(spec=StorageManager)
         self.image_storage_mock.return_value.uuid_exists.return_value = False
@@ -82,10 +78,10 @@ class Environment:
 
 
 @pytest.fixture()
-def environment(uuid_mock: Mock, time_mock: Mock) -> Environment:
+def environment(time_mock: Mock, random_choice_mock: Mock) -> Environment:
     env = Environment(
-        uuid_mock=uuid_mock,
         time_mock=time_mock,
+        random_choice_mock=random_choice_mock,
     )
     with env:
         yield env

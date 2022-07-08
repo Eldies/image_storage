@@ -36,7 +36,7 @@ class TestImageView:
         if filename_in_form:
             data['filename'] = filename_in_form
             additional_data['filename'] = filename_in_form
-        expected_filename = (filename_in_form + '-' if filename_in_form else '') + '75MkXu8ab9'
+        expected_filename = (filename_in_form + '-' if filename_in_form else '') + 'aaakXu8ab9'
         response = self.client.post(
             '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
@@ -90,7 +90,7 @@ class TestImageView:
         assert response.status_code == 200
         assert response.json == {
             'status': 'ok',
-            'uuid': 'filename-75MkXu8ab9',
+            'uuid': 'filename-aaakXu8ab9',
         }
 
     def test_post_ok_with_some_data(self):

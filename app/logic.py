@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import base58
+import random
 import time
-import uuid
 
 from .types import ClientInfo
 from . import settings
@@ -19,7 +19,7 @@ def generate_image_uuid(suggested_filename: str | None) -> str:
         uses timestamp in milliseconds, so uuids generated in different milliseconds should differ
         for uuids generated at the same millisecond, adds 5 random base58 symbols, which gives 58^3=195112 options
     """
-    random_string = base58.b58encode(uuid.uuid4().bytes).decode("utf-8")[:3]
+    random_string = ''.join(random.choice(base58.alphabet.decode()) for _ in range(3))
     timestamp_ms = int(time.time() * 1000)
     unique_part = '{}{}'.format(random_string, base58.b58encode_int(timestamp_ms).decode("utf-8"))
     if suggested_filename:
