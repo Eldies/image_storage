@@ -46,12 +46,12 @@ class TestImageView:
         assert response.status_code == 200
         assert response.json == {
             'status': 'ok',
-            'uuid': expected_filename,
+            'uuid': 'test_client/{}'.format(expected_filename),
         }
         assert self.env.image_storage_mock.call_count == 1
         assert self.env.image_storage_mock.return_value.save_image.call_count == 1
         save_image_call_args = self.env.image_storage_mock.return_value.save_image.call_args.args
-        assert save_image_call_args[0] == [expected_filename]
+        assert save_image_call_args[0] == ['test_client', expected_filename]
         assert save_image_call_args[1] == b'abcdef'
         assert json.loads(save_image_call_args[2]) == dict(
             data=additional_data,
@@ -90,7 +90,7 @@ class TestImageView:
         assert response.status_code == 200
         assert response.json == {
             'status': 'ok',
-            'uuid': 'filename-aaakXu8ab9',
+            'uuid': 'test_client/filename-aaakXu8ab9',
         }
 
     def test_post_ok_with_some_data(self):

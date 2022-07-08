@@ -28,14 +28,15 @@ def ping():
 
 
 class ImageView(MethodView):
-    def get_client(self) -> ClientInfo:
+    @cached_property
+    def client(self) -> ClientInfo:
         api_key = request.headers.get('X-API-KEY')
         logging.debug('Provided api_key: "{}"'.format(api_key))
         if api_key is not None:
             return get_client_info_by_api_key(api_key)
 
     def check_auth(self):
-        if self.get_client() is None:
+        if self.client is None:
             abort(401, 'Unauthorized')
 
     @cached_property
@@ -93,13 +94,13 @@ class ImageView(MethodView):
         )
 
         self.storage_manager.save_image(
-            [filename],
+            [self.client.id, filename],
             file_content,
             json.dumps(data),
         )
         return jsonify(dict(
             status='ok',
-            uuid=filename,
+            uuid='{}/{}'.format(self.client.id, filename),
         ))
 
     def get(self, uuid: str, client_id: str = None) -> Response:
