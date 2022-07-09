@@ -85,7 +85,7 @@ class ImageView(MethodView):
             abort(400, 'No file')
 
         filename = generate_image_uuid(self.form_values.get('filename') or self.form_values.get('file_name'))
-        logging.debug('Saving with uuid: {}'.format(filename))
+        logging.debug('Saving image with uuid "{}" for client "{}"'.format(filename, self.client.id))
 
         data = dict(
             additional_data={},

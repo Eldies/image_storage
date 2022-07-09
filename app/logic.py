@@ -17,7 +17,7 @@ def generate_image_uuid(suggested_filename: str | None) -> str:
     """
     Generates uuid, tries to make it unique:
         uses timestamp in milliseconds, so uuids generated in different milliseconds should differ
-        for uuids generated at the same millisecond, adds 5 random base58 symbols, which gives 58^3=195112 options
+        for uuids generated at the same millisecond, adds 3 random base58 symbols, which gives 58^3=195112 options
     """
     random_string = ''.join(random.choice(base58.alphabet.decode()) for _ in range(3))
     timestamp_ms = int(time.time() * 1000)
