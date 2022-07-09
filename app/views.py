@@ -88,7 +88,7 @@ class ImageView(MethodView):
         logging.debug('Saving with uuid: {}'.format(filename))
 
         data = dict(
-            data=self.form_values,
+            data={},
             mimetype=mimetype,
             content_length=len(file_content),
         )

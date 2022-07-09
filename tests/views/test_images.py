@@ -27,15 +27,14 @@ class TestImageView:
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, additional_data, filename_in_form=None, make_json=False, _base64=False):
-        data = dict(**additional_data)
+    def check_ok_request(self, filename_in_form=None, make_json=False, _base64=False):
+        data = dict()
         if _base64:
             data['base64'] = base64.b64encode(b'abcdef').decode()
         else:
             data['file'] = (io.BytesIO(b'abcdef'), 'test.jpg')
         if filename_in_form:
             data['filename'] = filename_in_form
-            additional_data['filename'] = filename_in_form
         expected_filename = (filename_in_form + '-' if filename_in_form else '') + 'aaakXu8ab9'
         response = self.client.post(
             '/v1/image/',
@@ -54,28 +53,25 @@ class TestImageView:
         assert save_image_call_args[0] == ['test_client', expected_filename]
         assert save_image_call_args[1] == b'abcdef'
         assert json.loads(save_image_call_args[2]) == dict(
-            data=additional_data,
+            data={},
             mimetype='image/jpeg',
             content_length=6,
         )
 
     def test_post_ok(self):
-        self.check_ok_request({})
+        self.check_ok_request()
 
     def test_post_ok_base64(self):
-        self.check_ok_request({}, _base64=True)
+        self.check_ok_request(_base64=True)
 
     def test_post_ok_json(self):
-        self.check_ok_request({}, make_json=True, _base64=True)
+        self.check_ok_request(make_json=True, _base64=True)
 
     def test_post_ok_json_with_filename(self):
-        self.check_ok_request({}, make_json=True, _base64=True, filename_in_form='filename')
-
-    def test_post_ok_json_with_some_key(self):
-        self.check_ok_request({'foo': 'bar'}, make_json=True, _base64=True)
+        self.check_ok_request(make_json=True, _base64=True, filename_in_form='filename')
 
     def test_post_ok_with_filename(self):
-        self.check_ok_request({}, filename_in_form='filename')
+        self.check_ok_request(filename_in_form='filename')
 
     def test_post_ok_with_file_name(self):
         response = self.client.post(
@@ -92,9 +88,6 @@ class TestImageView:
             'status': 'ok',
             'uuid': 'test_client/filename-aaakXu8ab9',
         }
-
-    def test_post_ok_with_some_data(self):
-        self.check_ok_request({'some_key': 'some_data'})
 
     def test_post_empty_file(self):
         data = dict(
