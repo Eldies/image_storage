@@ -2,7 +2,11 @@
 import os
 
 import pytest
-from unittest.mock import patch, mock_open, Mock
+from unittest.mock import (
+    Mock,
+    mock_open,
+    patch,
+)
 
 from app.storage_manager import StorageManager
 
@@ -18,8 +22,8 @@ class TestStorageManager:
 
         self.patches = [
             patch("builtins.open", self.open_mock),
-            patch("app.storage_manager.os.makedirs", self.makedirs_mock),
-            patch("app.storage_manager.os.path.exists", self.exists_mock),
+            patch("os.makedirs", self.makedirs_mock),
+            patch("os.path.exists", self.exists_mock),
         ]
         for p in self.patches:
             p.start()
