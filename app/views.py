@@ -94,7 +94,6 @@ class ImageView(MethodView):
         data = dict(
             additional_data={},
             mimetype=mimetype,
-            content_length=len(file_content),
         )
 
         self.storage_manager.save_image(
