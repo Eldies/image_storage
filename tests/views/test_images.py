@@ -55,7 +55,6 @@ class TestImageView:
         assert json.loads(save_image_call_args[2]) == dict(
             additional_data={},
             mimetype='image/jpeg',
-            content_length=6,
         )
 
     def test_post_ok(self):

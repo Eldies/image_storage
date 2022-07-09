@@ -66,7 +66,7 @@ class ImageView(MethodView):
 
     @cached_property
     def form_values(self) -> dict:
-        logging.debug('request.form.items(): {}'.format(str(request.form.items())))
+        logging.debug('request.form.items(): {}'.format(str(list(request.form.items()))))
         if request.is_json:
             logging.debug('request.json: {}'.format(str(request.json)))
 
