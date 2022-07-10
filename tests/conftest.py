@@ -8,13 +8,10 @@ from unittest.mock import (
     patch,
 )
 
-from app import create_app
-from app.storage_manager import StorageManager
-from app.types import ClientInfo
 
-
-@pytest.fixture(autouse=True)
+@pytest.fixture()
 def settings() -> None:
+    from app.types import ClientInfo
     patches = [
         patch('app.settings.UPLOAD_FOLDER', 'test_upload_path'),
         patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]),
@@ -29,7 +26,8 @@ def settings() -> None:
 
 
 @pytest.fixture()
-def app() -> Flask:
+def app(settings) -> Flask:
+    from app import create_app
     app = create_app({
         'TESTING': True,
     })
@@ -58,6 +56,7 @@ def time_mock() -> Mock:
 
 @pytest.fixture()
 def image_storage_mock() -> Mock:
+    from app.storage_manager import StorageManager
     mock = Mock(spec=StorageManager)
     mock.return_value.uuid_exists.return_value = False
     with patch('app.views.StorageManager', mock):

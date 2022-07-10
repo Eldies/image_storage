@@ -10,6 +10,10 @@ from app.logic import (
 
 
 class TestGetClientInfoByApiKey:
+    @pytest.fixture(autouse=True)
+    def _setup(self, settings):
+        pass
+
     def test_ok(self):
         client = get_client_info_by_api_key('TEST_API_KEY')
         assert client.id == 'test_client'
