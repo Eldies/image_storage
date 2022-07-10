@@ -92,7 +92,6 @@ class ImageView(MethodView):
         logging.debug('Saving image with uuid "{}" for client "{}"'.format(filename, self.client.id))
 
         data = dict(
-            additional_data={},
             mimetype=mimetype,
         )
 

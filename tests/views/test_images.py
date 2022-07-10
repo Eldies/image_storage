@@ -53,7 +53,6 @@ class TestImageView:
         assert save_image_call_args[0] == ['test_client', expected_filename]
         assert save_image_call_args[1] == b'abcdef'
         assert json.loads(save_image_call_args[2]) == dict(
-            additional_data={},
             mimetype='image/jpeg',
         )
 
