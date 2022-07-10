@@ -15,10 +15,23 @@ def test_upload_folder(folder):
         assert settings.UPLOAD_FOLDER == folder
 
 
-@pytest.mark.parametrize('api_key', ['api_key1', 'api_key2'])
-def test_client_info(api_key):
-    with patch('os.environ', dict(CLIENT_API_KEY=api_key)):
+@pytest.mark.parametrize('env,var', [
+    (dict(CLIENT_CREDENTIALS_1='cl:api_key1'), [ClientInfo('cl', 'api_key1')]),
+    (dict(FOO='cl:api_key1'), []),
+    (
+        dict(
+            CLIENT_CREDENTIALS_1='cl1:api_key3',
+            CLIENT_CREDENTIALS_2='cl2:api_key2',
+            CLIENT_CREDENTIALS_3='cl3:api_key1',
+        ),
+        [
+            ClientInfo('cl1', 'api_key3'),
+            ClientInfo('cl2', 'api_key2'),
+            ClientInfo('cl3', 'api_key1'),
+        ],
+    ),
+])
+def test_client_info(env, var):
+    with patch('os.environ', env):
         importlib.reload(settings)
-        assert settings.CLIENTS_INFO == [
-            ClientInfo('toysdb', api_key),
-        ]
+        assert settings.CLIENTS_INFO == var
