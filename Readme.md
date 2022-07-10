@@ -5,7 +5,7 @@
       restart: always
       environment:
         UPLOAD_FOLDER: /uploads
-        CLIENT_API_KEY: ${IMAGE_STORAGE_CLIENT_API_KEY}
+        CLIENT_CREDENTIALS_1: client:api_key
       ports:
         - <порт>:5000
       deploy:
