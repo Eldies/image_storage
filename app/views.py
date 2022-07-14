@@ -50,7 +50,7 @@ class ImageView(MethodView):
         file_content = base64.b64decode(request.json['base64'])
         mimetype = 'image/jpeg'
 
-        filename = generate_image_uuid(request.json.get('filename') or request.json.get('file_name'))
+        filename = generate_image_uuid(request.json.get('file_name'))
         logging.debug('Saving image with uuid "{}" for client "{}"'.format(filename, self.client.id))
 
         data = dict(

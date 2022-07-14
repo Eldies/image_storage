@@ -31,7 +31,7 @@ class TestImageView:
         data = dict()
         data['base64'] = base64.b64encode(b'abcdef').decode()
         if filename_in_form:
-            data['filename'] = filename_in_form
+            data['file_name'] = filename_in_form
         expected_filename = (filename_in_form + '-' if filename_in_form else '') + 'aaakXu8ab9'
         response = self.client.post(
             '/v1/image/',
