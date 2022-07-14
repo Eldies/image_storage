@@ -27,7 +27,11 @@ class TestImageView:
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, filename=None):
+    @pytest.mark.parametrize('filename', [
+        'filename',
+        None,
+    ])
+    def test_post_ok(self, filename):
         data = dict()
         data['base64'] = base64.b64encode(b'abcdef').decode()
         if filename:
@@ -51,12 +55,6 @@ class TestImageView:
         assert json.loads(save_image_call_kwargs['data']) == dict(
             mimetype='image/jpeg',
         )
-
-    def test_post_ok(self):
-        self.check_ok_request()
-
-    def test_post_ok_with_filename(self):
-        self.check_ok_request(filename='filename')
 
     def test_get_ok(self):
         self.env.image_storage_mock.return_value.uuid_exists.return_value = True
