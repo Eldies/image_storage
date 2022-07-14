@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 import base64
-from itertools import chain
 import json
 import logging
 from functools import cached_property
-from io import BytesIO
 
 from flask import (
     abort,
@@ -43,52 +41,16 @@ class ImageView(MethodView):
     def storage_manager(self) -> StorageManager:
         return StorageManager()
 
-    def _process_file(self):
-        file = request.files.get('file')
-
-        stream = BytesIO()
-        file.save(stream)
-        stream.seek(0)
-        file_content = stream.read()
-
-        if len(file_content) == 0:
-            abort(400, 'Empty file')
-
-        return file_content, file.mimetype
-
-    def _process_base64(self):
-        encoded = self.form_values['base64']
-        file_content = base64.b64decode(encoded)
-
-        del self.form_values['base64']
-
-        return file_content, 'image/jpeg'
-
-    @cached_property
-    def form_values(self) -> dict:
-        logging.debug('request.form.items(): {}'.format(str(list(request.form.items()))))
-        if request.is_json:
-            logging.debug('request.json: {}'.format(str(request.json)))
-
-        return {
-            key.lower(): value
-            for key, value in chain(
-                request.form.items(),
-                request.json.items() if request.is_json else [],
-            )
-        }
-
     def post(self) -> Response:
         self.check_auth()
 
-        if 'file' in request.files:
-            file_content, mimetype = self._process_file()
-        elif self.form_values.get('base64'):
-            file_content, mimetype = self._process_base64()
-        else:
+        if not request.json.get('base64'):
             abort(400, 'No file')
 
-        filename = generate_image_uuid(self.form_values.get('filename') or self.form_values.get('file_name'))
+        file_content = base64.b64decode(request.json['base64'])
+        mimetype = 'image/jpeg'
+
+        filename = generate_image_uuid(request.json.get('filename') or request.json.get('file_name'))
         logging.debug('Saving image with uuid "{}" for client "{}"'.format(filename, self.client.id))
 
         data = dict(

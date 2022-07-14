@@ -23,24 +23,20 @@ class TestImageView:
         assert response.json == {'status': 'error', 'error': 'Unauthorized'}
 
     def test_post_no_file(self):
-        response = self.client.post('/v1/image/', headers={'X-API-KEY': 'TEST_API_KEY'})
+        response = self.client.post('/v1/image/', json={}, headers={'X-API-KEY': 'TEST_API_KEY'})
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, filename_in_form=None, make_json=False, _base64=False):
+    def check_ok_request(self, filename_in_form=None):
         data = dict()
-        if _base64:
-            data['base64'] = base64.b64encode(b'abcdef').decode()
-        else:
-            data['file'] = (io.BytesIO(b'abcdef'), 'test.jpg')
+        data['base64'] = base64.b64encode(b'abcdef').decode()
         if filename_in_form:
             data['filename'] = filename_in_form
         expected_filename = (filename_in_form + '-' if filename_in_form else '') + 'aaakXu8ab9'
         response = self.client.post(
             '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
-            data=json.dumps(data) if make_json else data,
-            content_type='application/json' if make_json else 'multipart/form-data',
+            json=data,
         )
         assert response.status_code == 200
         assert response.json == {
@@ -59,46 +55,8 @@ class TestImageView:
     def test_post_ok(self):
         self.check_ok_request()
 
-    def test_post_ok_base64(self):
-        self.check_ok_request(_base64=True)
-
-    def test_post_ok_json(self):
-        self.check_ok_request(make_json=True, _base64=True)
-
-    def test_post_ok_json_with_filename(self):
-        self.check_ok_request(make_json=True, _base64=True, filename_in_form='filename')
-
     def test_post_ok_with_filename(self):
         self.check_ok_request(filename_in_form='filename')
-
-    def test_post_ok_with_file_name(self):
-        response = self.client.post(
-            '/v1/image/',
-            headers={'X-API-KEY': 'TEST_API_KEY'},
-            data={
-                'file': (io.BytesIO(b'abcdef'), 'test.jpg'),
-                'file_name': 'filename',
-            },
-            content_type='multipart/form-data',
-        )
-        assert response.status_code == 200
-        assert response.json == {
-            'status': 'ok',
-            'uuid': 'test_client/filename-aaakXu8ab9',
-        }
-
-    def test_post_empty_file(self):
-        data = dict(
-            file=(io.BytesIO(b''), 'test.jpg'),
-        )
-        response = self.client.post(
-            '/v1/image/',
-            headers={'X-API-KEY': 'TEST_API_KEY'},
-            data=data,
-            content_type='multipart/form-data',
-        )
-        assert response.status_code == 400
-        assert response.json == {'status': 'error', 'error': 'Empty file'}
 
     def test_get_ok(self):
         self.env.image_storage_mock.return_value.uuid_exists.return_value = True
