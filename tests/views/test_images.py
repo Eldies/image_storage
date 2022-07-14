@@ -27,12 +27,12 @@ class TestImageView:
         assert response.status_code == 400
         assert response.json == {'status': 'error', 'error': 'No file'}
 
-    def check_ok_request(self, filename_in_form=None):
+    def check_ok_request(self, filename=None):
         data = dict()
         data['base64'] = base64.b64encode(b'abcdef').decode()
-        if filename_in_form:
-            data['file_name'] = filename_in_form
-        expected_filename = (filename_in_form + '-' if filename_in_form else '') + 'aaakXu8ab9'
+        if filename:
+            data['file_name'] = filename
+        expected_filename = (filename + '-' if filename else '') + 'aaakXu8ab9'
         response = self.client.post(
             '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
@@ -45,10 +45,10 @@ class TestImageView:
         }
         assert self.env.image_storage_mock.call_count == 1
         assert self.env.image_storage_mock.return_value.save_image.call_count == 1
-        save_image_call_args = self.env.image_storage_mock.return_value.save_image.call_args.args
-        assert save_image_call_args[0] == ['test_client', expected_filename]
-        assert save_image_call_args[1] == b'abcdef'
-        assert json.loads(save_image_call_args[2]) == dict(
+        save_image_call_kwargs = self.env.image_storage_mock.return_value.save_image.call_args.kwargs
+        assert save_image_call_kwargs['uuid'] == ['test_client', expected_filename]
+        assert save_image_call_kwargs['file_content'] == b'abcdef'
+        assert json.loads(save_image_call_kwargs['data']) == dict(
             mimetype='image/jpeg',
         )
 
@@ -56,7 +56,7 @@ class TestImageView:
         self.check_ok_request()
 
     def test_post_ok_with_filename(self):
-        self.check_ok_request(filename_in_form='filename')
+        self.check_ok_request(filename='filename')
 
     def test_get_ok(self):
         self.env.image_storage_mock.return_value.uuid_exists.return_value = True

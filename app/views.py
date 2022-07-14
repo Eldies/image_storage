@@ -47,20 +47,15 @@ class ImageView(MethodView):
         if not request.json.get('base64'):
             abort(400, 'No file')
 
-        file_content = base64.b64decode(request.json['base64'])
-        mimetype = 'image/jpeg'
-
         filename = generate_image_uuid(request.json.get('file_name'))
         logging.debug('Saving image with uuid "{}" for client "{}"'.format(filename, self.client.id))
 
-        data = dict(
-            mimetype=mimetype,
-        )
-
         self.storage_manager.save_image(
-            [self.client.id, filename],
-            file_content,
-            json.dumps(data),
+            uuid=[self.client.id, filename],
+            file_content=base64.b64decode(request.json['base64']),
+            data=json.dumps(dict(
+                mimetype='image/jpeg',
+            )),
         )
         return jsonify(dict(
             status='ok',
