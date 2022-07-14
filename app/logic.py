@@ -3,7 +3,7 @@ import base58
 import random
 import time
 
-from .types import ClientInfo
+from .schemas import ClientInfo
 from . import settings
 
 

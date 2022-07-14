@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import io
 from flask import Flask
+
 from flask.testing import FlaskClient
 
 import pytest
@@ -11,7 +13,7 @@ from unittest.mock import (
 
 @pytest.fixture()
 def settings() -> None:
-    from app.types import ClientInfo
+    from app.schemas import ClientInfo
     patches = [
         patch('app.settings.UPLOAD_FOLDER', 'test_upload_path'),
         patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]),
@@ -59,6 +61,8 @@ def image_storage_mock() -> Mock:
     from app.storage_manager import StorageManager
     mock = Mock(spec=StorageManager)
     mock.return_value.uuid_exists.return_value = False
+    mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
+    mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
     with patch('app.views.StorageManager', mock):
         yield mock
 

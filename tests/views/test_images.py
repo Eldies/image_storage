@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import base64
-import io
 import json
 
 import pytest
@@ -65,13 +64,13 @@ class TestImageViewGet:
 
     def test_ok(self):
         self.env.image_storage_mock.return_value.uuid_exists.return_value = True
-        self.env.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
-        self.env.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
         response = self.client.get('/v1/image/some_client_id/some_uuid')
         assert response.status_code == 200
         assert response.content_type == 'image/jpeg'
         assert response.data == b'abcdef'
+        assert self.env.image_storage_mock.return_value.uuid_exists.call_args.args[0] == ['some_client_id', 'some_uuid']
         assert self.env.image_storage_mock.return_value.read_file.call_args.args[0] == ['some_client_id', 'some_uuid']
+        assert self.env.image_storage_mock.return_value.read_data.call_args.args[0] == ['some_client_id', 'some_uuid']
 
     def test_no_client_id(self):
         response = self.client.get('/v1/image/some_uuid')

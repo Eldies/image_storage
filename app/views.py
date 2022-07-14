@@ -18,7 +18,7 @@ from .logic import (
     generate_image_uuid,
 )
 from .storage_manager import StorageManager
-from .types import ClientInfo
+from .schemas import ClientInfo
 
 
 def ping():

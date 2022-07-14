@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 
-from .types import ClientInfo
+from .schemas import ClientInfo
 
 
 UPLOAD_FOLDER = os.environ.get('UPLOAD_FOLDER')

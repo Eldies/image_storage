@@ -4,7 +4,7 @@ import importlib
 import pytest
 from unittest.mock import patch
 
-from app.types import ClientInfo
+from app.schemas import ClientInfo
 from app import settings
 
 
