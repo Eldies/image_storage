@@ -27,7 +27,6 @@ def create_app(test_config: dict = None) -> Flask:
     app.add_url_rule('/ping', view_func=views.ping)
 
     app.add_url_rule('/v1/image/', view_func=views.ImageView.as_view('image_post'), methods=['POST'])
-    app.add_url_rule('/v1/image/<uuid>', view_func=views.ImageView.as_view('image_get1'), methods=['GET'])
     app.add_url_rule('/v1/image/<client_id>/<uuid>', view_func=views.ImageView.as_view('image_get2'), methods=['GET'])
 
     app.register_error_handler(400, error_handler)

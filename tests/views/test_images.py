@@ -67,22 +67,26 @@ class TestImageViewGet:
         self.env.image_storage_mock.return_value.uuid_exists.return_value = True
         self.env.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
         self.env.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
-        response = self.client.get('/v1/image/some_uuid')
-        assert response.status_code == 200
-        assert response.content_type == 'image/jpeg'
-        assert response.data == b'abcdef'
-        assert self.env.image_storage_mock.return_value.read_file.call_args.args[0] == ['some_uuid']
-
-    def test_ok_with_client_id(self):
-        self.env.image_storage_mock.return_value.uuid_exists.return_value = True
-        self.env.image_storage_mock.return_value.read_file.return_value = io.BytesIO(b'abcdef')
-        self.env.image_storage_mock.return_value.read_data.return_value = '{"mimetype": "image/jpeg"}'
         response = self.client.get('/v1/image/some_client_id/some_uuid')
         assert response.status_code == 200
         assert response.content_type == 'image/jpeg'
         assert response.data == b'abcdef'
         assert self.env.image_storage_mock.return_value.read_file.call_args.args[0] == ['some_client_id', 'some_uuid']
 
-    def test_unknown_uuid(self):
+    def test_no_client_id(self):
         response = self.client.get('/v1/image/some_uuid')
         assert response.status_code == 404
+        assert response.content_type == 'application/json'
+        assert response.json == dict(
+            status='error',
+            error='The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.',
+        )
+
+    def test_unknown_uuid(self):
+        response = self.client.get('/v1/image/some_client/some_uuid')
+        assert response.status_code == 404
+        assert response.content_type == 'application/json'
+        assert response.json == dict(
+            status='error',
+            error='Not Found',
+        )

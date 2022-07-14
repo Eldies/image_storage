@@ -62,8 +62,8 @@ class ImageView(MethodView):
             uuid='{}/{}'.format(self.client.id, filename),
         ))
 
-    def get(self, uuid: str, client_id: str = None) -> Response:
-        uuid = ([client_id] if client_id else []) + [uuid]
+    def get(self, uuid: str, client_id: str) -> Response:
+        uuid = [client_id, uuid]
         if not self.storage_manager.uuid_exists(uuid):
             abort(404, 'Not Found')
         return send_file(
