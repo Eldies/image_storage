@@ -8,8 +8,8 @@ RUN pip install -r requirements.txt
 FROM base as branch-env-production
 
 FROM base as branch-env-testing
-COPY requirements-dev.txt .
-RUN pip install -r requirements.txt -r requirements-dev.txt
+COPY requirements-test.txt .
+RUN pip install -r requirements.txt -r requirements-test.txt
 COPY ./tests tests
 
 FROM branch-env-${VERSION} as final

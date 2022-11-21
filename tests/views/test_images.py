@@ -5,11 +5,18 @@ import json
 import pytest
 
 
+@pytest.fixture()
+def generate_image_uuid_mock(monkeypatch):
+    def mock_func(suggested_filename):
+        return f'{suggested_filename or "aaa"}_generated'
+    monkeypatch.setattr('app.views.generate_image_uuid', mock_func)
+
+
 class TestImageViewPost:
     @pytest.fixture(autouse=True)
-    def _setup(self, client, environment):
+    def _setup(self, client, generate_image_uuid_mock, fs):
         self.client = client
-        self.env = environment
+        self.fake_filesystem = fs
 
     def test_no_api_key(self):
         response = self.client.post('/v1/image/')
@@ -35,7 +42,7 @@ class TestImageViewPost:
         data['base64'] = base64.b64encode(b'abcdef').decode()
         if filename:
             data['file_name'] = filename
-        expected_filename = (filename + '-' if filename else '') + 'aaakXu8ab9'
+        expected_filename = (filename if filename else 'aaa') + '_generated'
         response = self.client.post(
             '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
@@ -46,31 +53,34 @@ class TestImageViewPost:
             'status': 'ok',
             'uuid': 'test_client/{}'.format(expected_filename),
         }
-        assert self.env.image_storage_mock.call_count == 1
-        assert self.env.image_storage_mock.return_value.save_image.call_count == 1
-        save_image_call_kwargs = self.env.image_storage_mock.return_value.save_image.call_args.kwargs
-        assert save_image_call_kwargs['uuid'] == ['test_client', expected_filename]
-        assert save_image_call_kwargs['file_content'] == b'abcdef'
-        assert json.loads(save_image_call_kwargs['data']) == dict(
-            mimetype='image/jpeg',
-        )
+        assert self.fake_filesystem.isdir(f'/test_upload_path/test_client/{expected_filename}')
+        with open(f'/test_upload_path/test_client/{expected_filename}/file', 'rb') as file:
+            assert file.read() == b'abcdef'
+        with open(f'/test_upload_path/test_client/{expected_filename}/data', 'r') as file:
+            assert json.loads(file.read()) == dict(
+                mimetype='image/jpeg',
+            )
 
 
 class TestImageViewGet:
     @pytest.fixture(autouse=True)
-    def _setup(self, client, environment):
+    def _setup(self, client, fs):
         self.client = client
-        self.env = environment
+        self.fake_filesystem = fs
+        self.fake_filesystem.create_file(
+            '/test_upload_path/some_client_id/some_uuid/file',
+            contents=b'abcdef',
+        )
+        self.fake_filesystem.create_file(
+            '/test_upload_path/some_client_id/some_uuid/data',
+            contents=json.dumps(dict(mimetype='image/jpeg')),
+        )
 
     def test_ok(self):
-        self.env.image_storage_mock.return_value.uuid_exists.return_value = True
         response = self.client.get('/v1/image/some_client_id/some_uuid')
         assert response.status_code == 200
         assert response.content_type == 'image/jpeg'
         assert response.data == b'abcdef'
-        assert self.env.image_storage_mock.return_value.uuid_exists.call_args.args[0] == ['some_client_id', 'some_uuid']
-        assert self.env.image_storage_mock.return_value.read_file.call_args.args[0] == ['some_client_id', 'some_uuid']
-        assert self.env.image_storage_mock.return_value.read_data.call_args.args[0] == ['some_client_id', 'some_uuid']
 
     def test_no_client_id(self):
         response = self.client.get('/v1/image/some_uuid')
@@ -82,7 +92,7 @@ class TestImageViewGet:
         )
 
     def test_unknown_uuid(self):
-        response = self.client.get('/v1/image/some_client/some_uuid')
+        response = self.client.get('/v1/image/some_client/some_other_uuid')
         assert response.status_code == 404
         assert response.content_type == 'application/json'
         assert response.json == dict(

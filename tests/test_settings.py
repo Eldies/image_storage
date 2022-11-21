@@ -9,7 +9,7 @@ from app import settings
 
 
 @pytest.mark.parametrize('folder', ['foo', 'bar'])
-def test_upload_folder(folder):
+def test_upload_folder(folder, no_fake_filesystem):
     with patch('os.environ', dict(UPLOAD_FOLDER=folder)):
         importlib.reload(settings)
         assert settings.UPLOAD_FOLDER == folder
@@ -31,7 +31,7 @@ def test_upload_folder(folder):
         ],
     ),
 ])
-def test_client_info(env, var):
+def test_client_info(env, var, no_fake_filesystem):
     with patch('os.environ', env):
         importlib.reload(settings)
         assert settings.CLIENTS_INFO == var

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import random
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -7,6 +8,13 @@ from app.logic import (
     generate_image_uuid,
     get_client_info_by_api_key,
 )
+
+
+@pytest.fixture()
+def time_mock() -> Mock:
+    mock = Mock(return_value=1657234419.0)
+    with patch('time.time', mock):
+        yield mock
 
 
 class TestGetClientInfoByApiKey:
