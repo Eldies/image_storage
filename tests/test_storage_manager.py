@@ -41,11 +41,11 @@ class TestStorageManager:
 
     def test_read_data(self):
         self.fake_filesystem.create_file('/test_upload_path/some_uuid/data', contents='READ DATA')
-        assert StorageManager().read_data(['some_uuid']) == 'READ DATA'
+        assert StorageManager()._read_data(['some_uuid']) == 'READ DATA'
 
     def test_read_file(self):
         self.fake_filesystem.create_file('/test_upload_path/some_uuid/file', contents=b'READ DATA')
-        assert StorageManager().read_file(['some_uuid']).read() == b'READ DATA'
+        assert StorageManager()._read_file(['some_uuid']).read() == b'READ DATA'
 
     def test_path_for_uuid(self):
         assert StorageManager().path_for_uuid(['foo']) == '/test_upload_path{}foo'.format(os.sep)

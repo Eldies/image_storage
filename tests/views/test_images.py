@@ -3,6 +3,7 @@ import base64
 import json
 
 import pytest
+from werkzeug.exceptions import Unauthorized
 
 
 @pytest.fixture()
@@ -21,12 +22,12 @@ class TestImageViewPost:
     def test_no_api_key(self):
         response = self.client.post('/v1/image/')
         assert response.status_code == 401
-        assert response.json == {'status': 'error', 'error': 'Unauthorized'}
+        assert response.json == {'status': 'error', 'error': Unauthorized.description}
 
     def test_wrong_api_key(self):
         response = self.client.post('/v1/image/', headers={'X-API-KEY': 'random_string'})
         assert response.status_code == 401
-        assert response.json == {'status': 'error', 'error': 'Unauthorized'}
+        assert response.json == {'status': 'error', 'error': Unauthorized.description}
 
     def test_no_file(self):
         response = self.client.post('/v1/image/', json={}, headers={'X-API-KEY': 'TEST_API_KEY'})
