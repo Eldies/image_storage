@@ -88,7 +88,8 @@ class TestImageViewGet:
         assert response.content_type == 'application/json'
         assert response.json == dict(
             status='error',
-            error='The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.',
+            error='The requested URL was not found on the server.'
+                  ' If you entered the URL manually please check your spelling and try again.',
         )
 
     def test_unknown_uuid(self):
