@@ -2,7 +2,6 @@ name: Create and publish a Docker image
 
 env:
   REGISTRY: ${{ secrets.REGISTRY_HOST }}
-  IMAGE_NAME: ${{ github.repository }}
 
 # Configures this workflow to run every time a change is pushed to the branch called `release`.
 on:
@@ -20,6 +19,11 @@ jobs:
       attestations: write
       id-token: write
     steps:
+      - name: Repository name to lowercase
+        id: imagename
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ github.repository }}
       - name: Checkout repository
         uses: actions/checkout@v4
       - name: Log in to the Container registry
@@ -33,7 +37,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          images: ${{ env.REGISTRY }}/${{ steps.imagename.outputs.lowercase }}
       # This step uses the `docker/build-push-action` action to build the image, based on your repository's `Dockerfile`. If the build succeeds, it pushes the image to GitHub Packages.
       # It uses the `context` parameter to define the build's context as the set of files located in the specified path. For more information, see "[Usage](https://github.com/docker/build-push-action#usage)" in the README of the `docker/build-push-action` repository.
       # It uses the `tags` and `labels` parameters to tag and label the image with the output from the "meta" step.
@@ -50,7 +54,7 @@ jobs:
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
-          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-name: ${{ env.REGISTRY }}/${{ steps.imagename.outputs.lowercase }}
           subject-digest: ${{ steps.push.outputs.digest }}
           push-to-registry: true
       
