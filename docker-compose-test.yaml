@@ -1,0 +1,12 @@
+services:
+  image_storage:
+    build:
+      context: .
+      target: dev
+    command: pytest --cov=./app --cov-config=./tests/.coveragerc --cov-report=html
+    restart: 'no'
+    volumes:
+      - ./app:/src/app
+      - ./tests:/src/tests
+    environment:
+      PYTHONPATH: /src

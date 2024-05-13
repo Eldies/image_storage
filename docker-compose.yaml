@@ -1,5 +1,8 @@
+services:
   image_storage:
-    build: https://github.com/Eldies/image_storage.git
+    build:
+      context: .
+      target: prod
     restart: always
     environment:
       UPLOAD_FOLDER: /uploads

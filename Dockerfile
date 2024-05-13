@@ -1,20 +1,16 @@
-ARG VERSION=production
-
 FROM python:3.10-alpine as base
 WORKDIR /src
-COPY requirements.txt .
-RUN pip install -r requirements.txt
 
-FROM base as branch-env-production
+RUN pip install "poetry==1.5.1"
+RUN poetry config virtualenvs.create false
+COPY pyproject.toml ./
+RUN poetry install --no-root --no-interaction
 
-FROM base as branch-env-testing
-COPY requirements-test.txt .
-RUN pip install -r requirements.txt -r requirements-test.txt
-COPY ./tests tests
+FROM base as dev
+RUN poetry install --no-root --no-interaction --with test,dev
 
-FROM branch-env-${VERSION} as final
+FROM base as prod
 COPY ./app app
-#ENV PYTHONPATH=/src/:/src/app
+#ENV PYTHONPATH=/src/:/src/app/
 EXPOSE 5000
-
 CMD flask run --host=0.0.0.0

@@ -1,0 +1,35 @@
+[tool.poetry]
+name = "image_storage"
+version = "0.1.0"
+authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
+
+[tool.poetry.dependencies]
+python = "~3.10.0"
+Flask = "2.1.2"
+base58 = "2.1.1"
+Werkzeug = "~2"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+pytest = "7.2.0"
+pytest-cov = "4.0.0"
+pyfakefs = "5.0.0"
+
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^5.0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+addopts ="""
+    -s
+    -vv
+    --cov=. --cov-config=./tests/.coveragerc --cov-report=html
+"""
