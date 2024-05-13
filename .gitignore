@@ -131,3 +131,4 @@ dmypy.json
 uploads/
 .idea/
 /coverage_html_report/
+poetry.lock
