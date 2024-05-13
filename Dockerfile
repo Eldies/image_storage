@@ -1,15 +1,16 @@
-FROM python:3.10-alpine as base
-WORKDIR /src
-
-RUN pip install "poetry==1.5.1"
+FROM python:3.10-alpine as base-poetry
+RUN pip install poetry
 RUN poetry config virtualenvs.create false
 COPY pyproject.toml ./
-RUN poetry install --no-root --no-interaction
+RUN poetry export --no-interaction --output requirements.txt
 
-FROM base as dev
+FROM base-poetry as dev
 RUN poetry install --no-root --no-interaction --with test,dev
 
-FROM base as prod
+FROM python:3.10-alpine as prod
+WORKDIR /src
+COPY --from=base-poetry ./requirements.txt ./requirements.txt
+RUN pip install -r requirements.txt
 COPY ./app app
 #ENV PYTHONPATH=/src/:/src/app/
 EXPOSE 5000
