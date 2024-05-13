@@ -1,6 +1,7 @@
 [tool.poetry]
 name = "image_storage"
 version = "0.1.0"
+description = ""
 authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
 
 [tool.poetry.dependencies]
