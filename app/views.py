@@ -71,8 +71,8 @@ def post_image(
 @router_api.get("/image/{client_id}/{uuid}")
 def get_image(client_id: str, uuid: str):
     try:
-        file, data = get_storage_manager().get_file([client_id, uuid])
-        return Response(content=file.read(), media_type=data.get('mimetype'))
+        bytes, data = get_storage_manager().get_file([client_id, uuid])
+        return Response(content=bytes, media_type=data.get('mimetype'))
     except StorageManagerException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

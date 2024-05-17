@@ -30,10 +30,11 @@ class StorageManager(object):
         with open(os.path.join(self.path_for_uuid(uuid), 'data'), 'r') as f:
             return f.read()
 
-    def _read_file(self, uuid: list[str]) -> BinaryIO:
-        return open(os.path.join(self.path_for_uuid(uuid), 'file'), 'rb')
+    def _read_file(self, uuid: list[str]) -> bytes:
+        with open(os.path.join(self.path_for_uuid(uuid), 'file'), 'rb') as f:
+            return f.read()
 
-    def get_file(self, uuid: list[str]) -> tuple[BinaryIO, dict]:
+    def get_file(self, uuid: list[str]) -> tuple[bytes, dict]:
         if not self.uuid_exists(uuid):
             raise StorageManagerException('Not Found')
         return self._read_file(uuid), json.loads(self._read_data(uuid))

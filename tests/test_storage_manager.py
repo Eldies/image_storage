@@ -45,7 +45,7 @@ class TestStorageManager:
 
     def test_read_file(self):
         self.fake_filesystem.create_file('/test_upload_path/some_uuid/file', contents=b'READ DATA')
-        assert StorageManager()._read_file(['some_uuid']).read() == b'READ DATA'
+        assert StorageManager()._read_file(['some_uuid']) == b'READ DATA'
 
     def test_path_for_uuid(self):
         assert StorageManager().path_for_uuid(['foo']) == '/test_upload_path{}foo'.format(os.sep)
