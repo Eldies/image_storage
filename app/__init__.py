@@ -12,7 +12,7 @@ from . import (
 from .logging_config import LogConfig
 
 
-#dictConfig(LogConfig().dict())
+dictConfig(LogConfig().dict())
 
 app = FastAPI()
 

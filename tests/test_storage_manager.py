@@ -6,7 +6,6 @@ import pytest
 from app.storage_manager import StorageManager
 
 
-@pytest.mark.asyncio
 class TestStorageManager:
     @pytest.fixture(autouse=True)
     def _setup(self, settings, upload_folder):
@@ -26,12 +25,12 @@ class TestStorageManager:
             with open(data_path, 'r') as file:
                 assert file.read() == data
 
-    async def test_save_image_ok(self):
-        await StorageManager().save_image(['some_uuid'], b'abcdef', 'some_data')
+    def test_save_image_ok(self):
+        StorageManager().save_image(['some_uuid'], b'abcdef', 'some_data')
         self.check_save('some_uuid', 'some_data')
 
-    async def test_save_image_no_data_ok(self):
-        await StorageManager().save_image(['some_uuid'], b'abcdef')
+    def test_save_image_no_data_ok(self):
+        StorageManager().save_image(['some_uuid'], b'abcdef')
         self.check_save('some_uuid')
 
     @pytest.mark.parametrize('exists', [True, False])
@@ -40,17 +39,17 @@ class TestStorageManager:
             os.makedirs(os.path.join(self.upload_folder, 'some_uuid'))
         assert StorageManager().uuid_exists(['some_uuid']) == exists
 
-    async def test_read_data(self):
+    def test_read_data(self):
         os.makedirs(os.path.join(self.upload_folder, 'some_uuid'))
         with open(os.path.join(self.upload_folder, 'some_uuid', 'data'), 'w') as f:
             f.write('{"foo": "bar"}')
-        assert await StorageManager()._read_data(['some_uuid']) == {"foo": "bar"}
+        assert StorageManager()._read_data(['some_uuid']) == {"foo": "bar"}
 
-    async def test_read_file(self):
+    def test_read_file(self):
         os.makedirs(os.path.join(self.upload_folder, 'some_uuid'))
         with open(os.path.join(self.upload_folder, 'some_uuid', 'file'), 'wb') as f:
             f.write(b'READ DATA')
-        assert await StorageManager()._read_file(['some_uuid']) == b'READ DATA'
+        assert StorageManager()._read_file(['some_uuid']) == b'READ DATA'
 
     def test_path_for_uuid_with_sep(self):
         path = StorageManager().path_for_uuid(['foo', 'bar'])

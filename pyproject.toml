@@ -9,7 +9,6 @@ python = "~3.10.0"
 fastapi = "~0.111"
 uvicorn = "~0.29"
 base58 = "2.1.1"
-aiofile = "~3.8.8"
 
 [tool.poetry.group.test]
 optional = true
