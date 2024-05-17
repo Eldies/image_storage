@@ -3,7 +3,7 @@ import base64
 import json
 
 import pytest
-from werkzeug.exceptions import Unauthorized
+import pytest_asyncio
 
 
 @pytest.fixture()
@@ -13,44 +13,45 @@ def generate_image_uuid_mock(monkeypatch):
     monkeypatch.setattr('app.views.generate_image_uuid', mock_func)
 
 
+@pytest.mark.asyncio
 class TestImageViewPost:
-    @pytest.fixture(autouse=True)
-    def _setup(self, client, generate_image_uuid_mock, fs):
+    @pytest_asyncio.fixture(autouse=True)
+    async def _setup(self, client, generate_image_uuid_mock, fs):
         self.client = client
         self.fake_filesystem = fs
 
-    def test_no_api_key(self):
-        response = self.client.post('/v1/image/')
+    async def test_no_api_key(self):
+        response = await self.client.post('/v1/image/', json={})
         assert response.status_code == 401
-        assert response.json == {'status': 'error', 'error': Unauthorized.description}
+        assert response.json() == {'status': 'error', 'error': 'Not authenticated'}
 
-    def test_wrong_api_key(self):
-        response = self.client.post('/v1/image/', headers={'X-API-KEY': 'random_string'})
+    async def test_wrong_api_key(self):
+        response = await self.client.post('/v1/image/', headers={'X-API-KEY': 'random_string'}, json={})
         assert response.status_code == 401
-        assert response.json == {'status': 'error', 'error': Unauthorized.description}
+        assert response.json() == {'status': 'error', 'error': 'Not authenticated'}
 
-    def test_no_file(self):
-        response = self.client.post('/v1/image/', json={}, headers={'X-API-KEY': 'TEST_API_KEY'})
+    async def test_no_file(self):
+        response = await self.client.post('/v1/image/', json={}, headers={'X-API-KEY': 'TEST_API_KEY'})
         assert response.status_code == 400
-        assert response.json == {'status': 'error', 'error': 'No file'}
+        assert response.json() == {'status': 'error', 'error': 'No file'}
 
     @pytest.mark.parametrize('filename', [
         'filename',
         None,
     ])
-    def test_ok(self, filename):
+    async def test_ok(self, filename):
         data = dict()
         data['base64'] = base64.b64encode(b'abcdef').decode()
         if filename:
             data['file_name'] = filename
         expected_filename = (filename if filename else 'aaa') + '_generated'
-        response = self.client.post(
+        response = await self.client.post(
             '/v1/image/',
             headers={'X-API-KEY': 'TEST_API_KEY'},
             json=data,
         )
         assert response.status_code == 200
-        assert response.json == {
+        assert response.json() == {
             'status': 'ok',
             'uuid': 'test_client/{}'.format(expected_filename),
         }
@@ -63,8 +64,9 @@ class TestImageViewPost:
             )
 
 
+@pytest.mark.asyncio
 class TestImageViewGet:
-    @pytest.fixture(autouse=True)
+    @pytest_asyncio.fixture(autouse=True)
     def _setup(self, client, fs):
         self.client = client
         self.fake_filesystem = fs
@@ -77,27 +79,26 @@ class TestImageViewGet:
             contents=json.dumps(dict(mimetype='image/jpeg')),
         )
 
-    def test_ok(self):
-        response = self.client.get('/v1/image/some_client_id/some_uuid')
+    async def test_ok(self):
+        response = await self.client.get('/v1/image/some_client_id/some_uuid')
         assert response.status_code == 200
-        assert response.content_type == 'image/jpeg'
-        assert response.data == b'abcdef'
+        assert response.headers['Content-Type'] == 'image/jpeg'
+        assert response.content == b'abcdef'
 
-    def test_no_client_id(self):
-        response = self.client.get('/v1/image/some_uuid')
+    async def test_no_client_id(self):
+        response = await self.client.get('/v1/image/some_uuid')
         assert response.status_code == 404
-        assert response.content_type == 'application/json'
-        assert response.json == dict(
+        assert response.headers['Content-Type'] == 'application/json'
+        assert response.json() == dict(
             status='error',
-            error='The requested URL was not found on the server.'
-                  ' If you entered the URL manually please check your spelling and try again.',
+            error='Not Found',
         )
 
-    def test_unknown_uuid(self):
-        response = self.client.get('/v1/image/some_client/some_other_uuid')
+    async def test_unknown_uuid(self):
+        response = await self.client.get('/v1/image/some_client/some_other_uuid')
         assert response.status_code == 404
-        assert response.content_type == 'application/json'
-        assert response.json == dict(
+        assert response.headers['Content-Type'] == 'application/json'
+        assert response.json() == dict(
             status='error',
             error='Not Found',
         )
