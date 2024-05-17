@@ -4,7 +4,7 @@ from app import app
 
 
 @pytest_asyncio.fixture()
-async def client(settings, reset_fake_filesystem) -> AsyncClient:
+async def client(settings) -> AsyncClient:
     async with AsyncClient(
         app=app,
         base_url="http://testserver",

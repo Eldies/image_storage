@@ -1,13 +1,19 @@
 # -*- coding: utf-8 -*-
 import pytest
 from unittest.mock import patch
+import tempfile
 
 
 @pytest.fixture()
-def settings() -> None:
+def upload_folder() -> str:
+    return tempfile.mkdtemp()
+
+
+@pytest.fixture()
+def settings(upload_folder: str) -> None:
     from app.schemas import ClientInfo
     patches = [
-        patch('app.settings.UPLOAD_FOLDER', '/test_upload_path'),
+        patch('app.settings.UPLOAD_FOLDER', upload_folder),
         patch('app.settings.CLIENTS_INFO', [ClientInfo(id='test_client', api_key='TEST_API_KEY')]),
     ]
     for p in patches:
@@ -17,15 +23,3 @@ def settings() -> None:
 
     for p in patches:
         p.stop()
-
-
-@pytest.fixture(autouse=True)
-def reset_fake_filesystem(fs):
-    fs.reset()
-
-
-@pytest.fixture()
-def no_fake_filesystem(fs):
-    fs.pause()
-    yield
-    fs.resume()

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import base64
 import json
+import os
 
 import pytest
 import pytest_asyncio
@@ -16,9 +17,9 @@ def generate_image_uuid_mock(monkeypatch):
 @pytest.mark.asyncio
 class TestImageViewPost:
     @pytest_asyncio.fixture(autouse=True)
-    async def _setup(self, client, generate_image_uuid_mock, fs):
+    async def _setup(self, client, generate_image_uuid_mock, upload_folder):
         self.client = client
-        self.fake_filesystem = fs
+        self.upload_folder = upload_folder
 
     async def test_no_api_key(self):
         response = await self.client.post('/v1/image/', json={})
@@ -55,10 +56,10 @@ class TestImageViewPost:
             'status': 'ok',
             'uuid': 'test_client/{}'.format(expected_filename),
         }
-        assert self.fake_filesystem.isdir(f'/test_upload_path/test_client/{expected_filename}')
-        with open(f'/test_upload_path/test_client/{expected_filename}/file', 'rb') as file:
+        assert os.path.isdir(os.path.join(self.upload_folder, 'test_client', expected_filename))
+        with open(os.path.join(self.upload_folder, 'test_client', expected_filename, 'file'), 'rb') as file:
             assert file.read() == b'abcdef'
-        with open(f'/test_upload_path/test_client/{expected_filename}/data', 'r') as file:
+        with open(os.path.join(self.upload_folder, 'test_client', expected_filename, 'data'), 'r') as file:
             assert json.loads(file.read()) == dict(
                 mimetype='image/jpeg',
             )
@@ -67,17 +68,13 @@ class TestImageViewPost:
 @pytest.mark.asyncio
 class TestImageViewGet:
     @pytest_asyncio.fixture(autouse=True)
-    def _setup(self, client, fs):
+    def _setup(self, client, upload_folder):
         self.client = client
-        self.fake_filesystem = fs
-        self.fake_filesystem.create_file(
-            '/test_upload_path/some_client_id/some_uuid/file',
-            contents=b'abcdef',
-        )
-        self.fake_filesystem.create_file(
-            '/test_upload_path/some_client_id/some_uuid/data',
-            contents=json.dumps(dict(mimetype='image/jpeg')),
-        )
+        os.makedirs(os.path.join(upload_folder, 'some_client_id', 'some_uuid'))
+        with open(os.path.join(upload_folder, 'some_client_id', 'some_uuid', 'file'), 'wb') as f:
+            f.write(b'abcdef')
+        with open(os.path.join(upload_folder, 'some_client_id', 'some_uuid', 'data'), 'w') as f:
+            f.write(json.dumps(dict(mimetype='image/jpeg')))
 
     async def test_ok(self):
         response = await self.client.get('/v1/image/some_client_id/some_uuid')

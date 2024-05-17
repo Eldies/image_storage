@@ -29,7 +29,7 @@ class PostImageRequest(BaseModel):
 
 
 @router_api.post("/image/")
-def post_image(
+async def post_image(
     request: Request,
     params: PostImageRequest,
 ):
@@ -54,7 +54,7 @@ def post_image(
     filename = generate_image_uuid(params.file_name)
     logger.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
 
-    get_storage_manager().save_image(
+    await get_storage_manager().save_image(
         uuid=[client.id, filename],
         file_content=base64.b64decode(params.base64),
         data=json.dumps(dict(
@@ -69,9 +69,9 @@ def post_image(
 
 
 @router_api.get("/image/{client_id}/{uuid}")
-def get_image(client_id: str, uuid: str):
+async def get_image(client_id: str, uuid: str):
     try:
-        bytes, data = get_storage_manager().get_file([client_id, uuid])
+        bytes, data = await get_storage_manager().get_file([client_id, uuid])
         return Response(content=bytes, media_type=data.get('mimetype'))
     except StorageManagerException as e:
         raise HTTPException(
