@@ -11,23 +11,3 @@ CLIENTS_INFO = [
     for env_var in os.environ
     if 'CLIENT_CREDENTIALS_' in env_var
 ]
-
-LOGGING_CONFIG = {
-    'version': 1,
-    'formatters': {
-        'default': {
-            'format': '[%(asctime)s] %(levelname)s in %(module)s:%(lineno)s: %(message)s',
-        }
-    },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'level': 'DEBUG',
-            'formatter': 'default',
-        },
-    },
-    'root': {
-        'level': 'DEBUG',
-        'handlers': ['console']
-    },
-}

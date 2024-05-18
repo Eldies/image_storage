@@ -3,17 +3,11 @@ import base64
 import json
 import logging
 
-from flask import (
-    jsonify,
-    request,
-    Response,
-    send_file,
-)
-from werkzeug.exceptions import (
-    BadRequest,
-    NotFound,
-    Unauthorized,
-)
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from starlette import status
+from starlette.requests import Request
+from starlette.responses import Response
 
 from .logic import (
     get_client_info_by_api_key,
@@ -25,42 +19,62 @@ from .storage_manager import (
 )
 
 
-def ping():
-    return 'pong'
+router_api = APIRouter(prefix="/v1")
+logger = logging.getLogger("image-storage")
 
 
-def post_image() -> Response:
+class PostImageRequest(BaseModel):
+    file_name: str = None
+    base64: bytes = None
+
+
+@router_api.post("/image/")
+async def post_image(
+    request: Request,
+    params: PostImageRequest,
+):
     api_key = request.headers.get('X-API-KEY')
-    logging.debug('Provided api_key: "{}"'.format(api_key))
+    logger.debug('Provided api_key: "{}"'.format(api_key))
     client = None
     if api_key is not None:
         client = get_client_info_by_api_key(api_key)
 
     if client is None:
-        raise Unauthorized()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+        )
 
-    if not request.json.get('base64'):
-        raise BadRequest('No file')
+    if not params.base64:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='No file',
+        )
 
-    filename = generate_image_uuid(request.json.get('file_name'))
-    logging.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
+    filename = generate_image_uuid(params.file_name)
+    logger.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
 
     get_storage_manager().save_image(
         uuid=[client.id, filename],
-        file_content=base64.b64decode(request.json['base64']),
+        file_content=base64.b64decode(params.base64),
         data=json.dumps(dict(
             mimetype='image/jpeg',
         )),
     )
-    return jsonify(dict(
+
+    return dict(
         status='ok',
         uuid='{}/{}'.format(client.id, filename),
-    ))
+    )
 
 
-def get_image(uuid: str, client_id: str) -> Response:
+@router_api.get("/image/{client_id}/{uuid}")
+async def get_image(client_id: str, uuid: str):
     try:
-        file, data = get_storage_manager().get_file([client_id, uuid])
-        return send_file(file, mimetype=data.get('mimetype'))
+        content, data = get_storage_manager().get_file([client_id, uuid])
+        return Response(content=content, media_type=data.get('mimetype'))
     except StorageManagerException as e:
-        raise NotFound(*e.args)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(*e.args),
+        )

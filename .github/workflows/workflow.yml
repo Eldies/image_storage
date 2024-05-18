@@ -75,8 +75,10 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ steps.imagename.outputs.lowercase }}
           tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=ref,event=pr
+            type=raw,value=latest,enable={{ is_default_branch }},priority=100
+            type=ref,event=branch,suffix=-{{ sha }},enable={{ is_default_branch }},priority=200
+            type=ref,event=pr,priority=100
+            type=ref,event=pr,suffix=-{{ sha }},priority=200
       - name: Build and push Docker image
         id: push
         uses: docker/build-push-action@v5

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
 import os
-from typing import BinaryIO
 
 from . import settings
 
@@ -26,17 +25,21 @@ class StorageManager(object):
             with open(os.path.join(folder, 'data'), 'w') as f:
                 f.write(data)
 
-    def _read_data(self, uuid: list[str]) -> str:
-        with open(os.path.join(self.path_for_uuid(uuid), 'data'), 'r') as f:
+    def _read_data(self, uuid: list[str]) -> dict:
+        path = os.path.join(self.path_for_uuid(uuid), 'data')
+        if not os.path.exists(path):
+            return {}
+        with open(path, 'r') as f:
+            return json.loads(f.read())
+
+    def _read_file(self, uuid: list[str]) -> bytes:
+        with open(os.path.join(self.path_for_uuid(uuid), 'file'), 'rb') as f:
             return f.read()
 
-    def _read_file(self, uuid: list[str]) -> BinaryIO:
-        return open(os.path.join(self.path_for_uuid(uuid), 'file'), 'rb')
-
-    def get_file(self, uuid: list[str]) -> tuple[BinaryIO, dict]:
+    def get_file(self, uuid: list[str]) -> tuple[bytes, dict]:
         if not self.uuid_exists(uuid):
             raise StorageManagerException('Not Found')
-        return self._read_file(uuid), json.loads(self._read_data(uuid))
+        return self._read_file(uuid), self._read_data(uuid)
 
 
 def get_storage_manager() -> StorageManager:

@@ -1,38 +1,38 @@
 # -*- coding: utf-8 -*-
-from flask import (
-    Flask,
-    jsonify,
-    Response,
-)
+from fastapi import FastAPI, HTTPException
 from logging.config import dictConfig
 
-from werkzeug.exceptions import HTTPException
+from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from . import (
     settings,
     views,
 )
+from .logging_config import LogConfig
 
 
-def error_handler(error: HTTPException) -> (Response, int):
-    return jsonify(dict(status='error', error=error.description)), error.code
+dictConfig(LogConfig().dict())
+
+app = FastAPI()
 
 
-def create_app(test_config: dict = None) -> Flask:
-    app = Flask(__name__)
+@app.exception_handler(400)
+@app.exception_handler(401)
+@app.exception_handler(404)
+async def exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+    return JSONResponse(
+        status_code=exc.status_code,
+        content=dict(
+            status='error',
+            error=exc.detail,
+        ),
+    )
 
-    if test_config is not None:
-        app.config.update(test_config)
 
-    app.add_url_rule('/ping', view_func=views.ping)
+@app.get("/ping", response_model=str)
+def ping():
+    return 'pong'
 
-    app.add_url_rule('/v1/image/', view_func=views.post_image, methods=['POST'])
-    app.add_url_rule('/v1/image/<client_id>/<uuid>', view_func=views.get_image, methods=['GET'])
 
-    app.register_error_handler(400, error_handler)
-    app.register_error_handler(401, error_handler)
-    app.register_error_handler(404, error_handler)
-
-    dictConfig(settings.LOGGING_CONFIG)
-
-    return app
+app.include_router(views.router_api)

@@ -1,12 +1,12 @@
-import pytest
-from flask.testing import FlaskClient
+import pytest_asyncio
+from httpx import AsyncClient
+from app import app
 
 
-@pytest.fixture()
-def client(settings, reset_fake_filesystem) -> FlaskClient:
-    from app import create_app
-    app = create_app({
-        'TESTING': True,
-    })
-    with app.app_context():
-        yield app.test_client()
+@pytest_asyncio.fixture()
+async def client(settings) -> AsyncClient:
+    async with AsyncClient(
+        app=app,
+        base_url="http://testserver",
+    ) as client:
+        yield client

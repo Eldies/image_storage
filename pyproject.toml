@@ -6,17 +6,17 @@ authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
 
 [tool.poetry.dependencies]
 python = "~3.10.0"
-Flask = "2.1.2"
+fastapi = "~0.111"
+uvicorn = "~0.29"
 base58 = "2.1.1"
-Werkzeug = "~2"
 
 [tool.poetry.group.test]
 optional = true
 
 [tool.poetry.group.test.dependencies]
-pytest = "7.2.0"
-pytest-cov = "4.0.0"
-pyfakefs = "5.0.0"
+pytest = "~8.2.0"
+pytest-cov = "^5.0.0"
+pytest-asyncio = "^0"
 
 [tool.poetry.group.dev]
 optional = true
@@ -30,7 +30,9 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.pytest.ini_options]
 addopts ="""
+    --capture=tee-sys
     -s
     -vv
-    --cov=. --cov-config=./tests/.coveragerc --cov-report=html
+    -p no:cacheprovider
+    --strict-markers
 """

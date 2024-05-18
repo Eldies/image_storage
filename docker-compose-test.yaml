@@ -8,5 +8,6 @@ services:
     volumes:
       - ./app:/src/app
       - ./tests:/src/tests
+      - ./htmlcov:/src/htmlcov
     environment:
       PYTHONPATH: /src
