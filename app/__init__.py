@@ -5,10 +5,7 @@ from logging.config import dictConfig
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from . import (
-    settings,
-    views,
-)
+from . import views
 from .logging_config import LogConfig
 
 
@@ -24,7 +21,7 @@ async def exception_handler(request: Request, exc: HTTPException) -> JSONRespons
     return JSONResponse(
         status_code=exc.status_code,
         content=dict(
-            status='error',
+            status="error",
             error=exc.detail,
         ),
     )
@@ -32,7 +29,7 @@ async def exception_handler(request: Request, exc: HTTPException) -> JSONRespons
 
 @app.get("/ping", response_model=str)
 def ping():
-    return 'pong'
+    return "pong"
 
 
 app.include_router(views.router_api)

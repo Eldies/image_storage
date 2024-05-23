@@ -33,7 +33,7 @@ async def post_image(
     request: Request,
     params: PostImageRequest,
 ):
-    api_key = request.headers.get('X-API-KEY')
+    api_key = request.headers.get("X-API-KEY")
     logger.debug('Provided api_key: "{}"'.format(api_key))
     client = None
     if api_key is not None:
@@ -48,7 +48,7 @@ async def post_image(
     if not params.base64:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='No file',
+            detail="No file",
         )
 
     filename = generate_image_uuid(params.file_name)
@@ -57,14 +57,16 @@ async def post_image(
     get_storage_manager().save_image(
         uuid=[client.id, filename],
         file_content=base64.b64decode(params.base64),
-        data=json.dumps(dict(
-            mimetype='image/jpeg',
-        )),
+        data=json.dumps(
+            dict(
+                mimetype="image/jpeg",
+            )
+        ),
     )
 
     return dict(
-        status='ok',
-        uuid='{}/{}'.format(client.id, filename),
+        status="ok",
+        uuid="{}/{}".format(client.id, filename),
     )
 
 
@@ -72,7 +74,7 @@ async def post_image(
 async def get_image(client_id: str, uuid: str):
     try:
         content, data = get_storage_manager().get_file([client_id, uuid])
-        return Response(content=content, media_type=data.get('mimetype'))
+        return Response(content=content, media_type=data.get("mimetype"))
     except StorageManagerException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

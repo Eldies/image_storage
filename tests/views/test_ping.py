@@ -10,6 +10,6 @@ class TestPingView:
         self.client = client
 
     async def test_ping(self):
-        response = await self.client.get('/ping')
+        response = await self.client.get("/ping")
         assert response.status_code == 200
         assert response.content == b'"pong"'
