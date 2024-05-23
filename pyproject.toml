@@ -24,6 +24,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 flake8 = "^5.0.4"
 black = "^24.4.2"
+isort = "~5.13.2"
 
 [build-system]
 requires = ["poetry-core"]
