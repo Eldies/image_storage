@@ -6,7 +6,6 @@ on:
 jobs:
   update-cluster-config:
     runs-on: ubuntu-latest
-    needs: build-and-push-image
     steps:
       - uses: actions/checkout@main
         with:
