@@ -64,7 +64,9 @@ jobs:
         with:
           string: ${{ github.repository }}
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@main
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
@@ -89,7 +91,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.imagename.outputs.lowercase }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ steps.imagename.outputs.lowercase }}:buildcache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ steps.imagename.outputs.lowercase }}:buildcache,mode=max
       - name: Generate artifact attestation
         uses: actions/attest-build-provenance@v1
         with:
@@ -101,7 +104,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-and-push-image
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
         with:
           repository: eldies/cluster-config
           ref: 'main'
@@ -114,14 +117,20 @@ jobs:
         id: vars
         run: |
           echo "tag=${{ needs.build-and-push-image.outputs.version }}" >> "$GITHUB_OUTPUT"
-      - name: prepare filename
-        id: filename
+      - name: prepare commit message and filename - push
+        if: github.event_name == 'push'
         run: |
-          echo "filename=pr-${{ github.event.number }}-${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
+          echo 'COMMIT_MESSAGE=push to master' >> "$GITHUB_ENV"
+          echo "FILENAME=production" >> "$GITHUB_ENV"
+      - name: prepare commit message and filename - pull request
+        if: github.event_name == 'pull_request'
+        run: |
+          echo 'COMMIT_MESSAGE=pull request https://github.com/${{ github.repository }}/pull/${{ github.event.number }}' >> "$GITHUB_ENV"
+          echo "FILENAME=pr-${{ github.event.number }}-${{ github.head_ref || github.ref_name }}" >> "$GITHUB_ENV"
       - name: make config file
         run: |
-          echo '${{ toJSON(steps.vars.outputs) }}' > apps/image-storage/configs/${{ steps.filename.outputs.filename }}.json
+          echo '${{ toJSON(steps.vars.outputs) }}' > apps/image-storage/configs/${{ env.FILENAME }}.json
       - run: |
           git add .
-          git commit -m "[actions] image-storage config updated"
+          git commit -m "[actions] image-storage config updated - ${{ env.COMMIT_MESSAGE }}"
           git push origin main
