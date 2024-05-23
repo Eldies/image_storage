@@ -46,6 +46,7 @@ jobs:
           python -m pytest tests
 
   build-and-push-image:
+    if: github.event.commits[0].author.name != github.repository_owner
     runs-on: ubuntu-latest
     needs: [linters, tests]
     permissions:
@@ -58,6 +59,10 @@ jobs:
     outputs:
       version: ${{ steps.meta.outputs.version }}
     steps:
+      - name: test
+        run: |
+          echo "${{ github.repository_owner }}"
+          echo "${{ github.event.commits[0].author.name }}"
       - name: Repository name to lowercase
         id: imagename
         uses: ASzc/change-string-case-action@v6
@@ -101,6 +106,7 @@ jobs:
           push-to-registry: true
 
   update-cluster-config:
+    if: github.event.commits[0].author.name == github.repository_owner
     runs-on: ubuntu-latest
     needs: build-and-push-image
     steps:
