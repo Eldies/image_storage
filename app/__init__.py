@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
-from fastapi import FastAPI, HTTPException
 from logging.config import dictConfig
 
+from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from . import views
 from .logging_config import LogConfig
-
 
 dictConfig(LogConfig().dict())
 

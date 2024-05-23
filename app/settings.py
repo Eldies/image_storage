@@ -3,7 +3,6 @@ import os
 
 from .schemas import ClientInfo
 
-
 UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER")
 
 CLIENTS_INFO = [

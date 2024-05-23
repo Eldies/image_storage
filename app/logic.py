@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-import base58
 import random
 import time
 
-from .schemas import ClientInfo
+import base58
+
 from . import settings
+from .schemas import ClientInfo
 
 
 def get_client_info_by_api_key(api_key: str) -> ClientInfo | None:

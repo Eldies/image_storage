@@ -9,15 +9,8 @@ from starlette import status
 from starlette.requests import Request
 from starlette.responses import Response
 
-from .logic import (
-    get_client_info_by_api_key,
-    generate_image_uuid,
-)
-from .storage_manager import (
-    get_storage_manager,
-    StorageManagerException,
-)
-
+from .logic import generate_image_uuid, get_client_info_by_api_key
+from .storage_manager import StorageManagerException, get_storage_manager
 
 router_api = APIRouter(prefix="/v1")
 logger = logging.getLogger("image-storage")

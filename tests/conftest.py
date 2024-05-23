@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-import pytest
-from unittest.mock import patch
 import tempfile
+from unittest.mock import patch
+
+import pytest
 
 
 @pytest.fixture()

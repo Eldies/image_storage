@@ -4,10 +4,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from app.logic import (
-    generate_image_uuid,
-    get_client_info_by_api_key,
-)
+from app.logic import generate_image_uuid, get_client_info_by_api_key
 
 
 @pytest.fixture()
