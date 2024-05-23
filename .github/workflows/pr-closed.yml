@@ -1,0 +1,30 @@
+on:
+  pull_request:
+    branches: [ master ]
+    types: [ closed ]
+
+jobs:
+  update-cluster-config:
+    runs-on: ubuntu-latest
+    needs: build-and-push-image
+    steps:
+      - uses: actions/checkout@main
+        with:
+          repository: eldies/cluster-config
+          ref: 'main'
+          token:  ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+      - name: setup git config
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+      - name: prepare filename
+        id: filename
+        run: |
+          echo "filename=pr-${{ github.event.number }}-${{ github.head_ref || github.ref_name }}" >> "$GITHUB_OUTPUT"
+      - name: remove config file
+        run: |
+          rm apps/image-storage/configs/${{ steps.filename.outputs.filename }}.json
+      - run: |
+          git add .
+          git commit -m "[actions] image-storage config updated - pull request closed https://github.com/${{ github.repository }}/pull/${{ github.event.number }}"
+          git push origin main
