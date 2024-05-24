@@ -17,8 +17,8 @@ logger = logging.getLogger("image-storage")
 
 
 class PostImageRequest(BaseModel):
-    file_name: str = None
-    base64: bytes = None
+    file_name: str | None = None
+    base64: bytes | None = None
 
 
 @router_api.post("/image/")
