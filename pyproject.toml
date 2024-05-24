@@ -25,6 +25,7 @@ optional = true
 flake8 = "^5.0.4"
 black = "^24.4.2"
 isort = "~5.13.2"
+mypy = "^1.10"
 
 [build-system]
 requires = ["poetry-core"]
@@ -42,3 +43,6 @@ addopts ="""
 [tool.black]
 line-length = 120
 target-version = ['py310']
+
+[tool.mypy]
+exclude = ['tests/',]
