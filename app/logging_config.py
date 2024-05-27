@@ -31,6 +31,6 @@ class LogConfig(BaseModel):
         },
     }
     loggers = {
-        "geo-analytics-backend": {"handlers": ["image-storage"], "level": LOG_LEVEL},
+        "image-storage": {"handlers": ["image-storage"], "level": LOG_LEVEL},
         "update_db": {"handlers": ["image-storage"], "level": LOG_LEVEL},
     }
