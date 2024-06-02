@@ -5,5 +5,5 @@ import pytest
 
 
 @pytest.fixture()
-def upload_folder(monkeypatch) -> str:
+def upload_folder() -> str:
     return tempfile.mkdtemp()

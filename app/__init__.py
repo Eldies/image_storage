@@ -27,7 +27,7 @@ async def exception_handler(request: Request, exc: HTTPException) -> JSONRespons
 
 
 @app.get("/ping", response_model=str)
-def ping():
+def ping() -> str:
     return "pong"
 
 

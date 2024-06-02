@@ -25,7 +25,7 @@ class PostImageRequest(BaseModel):
 async def post_image(
     request: Request,
     params: PostImageRequest,
-):
+) -> dict[str, str]:
     api_key = request.headers.get("X-API-KEY")
     logger.debug('Provided api_key: "{}"'.format(api_key))
     client = None
@@ -64,7 +64,7 @@ async def post_image(
 
 
 @router_api.get("/image/{client_id}/{uuid}")
-async def get_image(client_id: str, uuid: str):
+async def get_image(client_id: str, uuid: str) -> Response:
     try:
         content, data = get_storage_manager().get_file([client_id, uuid])
         return Response(content=content, media_type=data.get("mimetype"))

@@ -25,7 +25,7 @@ class StorageManager(object):
             with open(os.path.join(folder, "data"), "w") as f:
                 f.write(data)
 
-    def _read_data(self, uuid: list[str]) -> dict:
+    def _read_data(self, uuid: list[str]) -> dict[str, str]:
         path = os.path.join(self.path_for_uuid(uuid), "data")
         if not os.path.exists(path):
             return {}
