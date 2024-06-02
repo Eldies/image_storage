@@ -6,7 +6,8 @@ services:
     restart: always
     environment:
       UPLOAD_FOLDER: /uploads
-      CLIENT_CREDENTIALS_1: client:api_key
+      CLIENTS_INFO__0__api_key: api_key
+      CLIENTS_INFO__0__id: client
     ports:
       - 5000:5000
     volumes:

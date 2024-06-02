@@ -8,7 +8,7 @@ from app.storage_manager import StorageManager
 
 class TestStorageManager:
     @pytest.fixture(autouse=True)
-    def _setup(self, settings, upload_folder):
+    def _setup(self, upload_folder):
         self.upload_folder = upload_folder
 
     def check_save(self, uuid, data=None):

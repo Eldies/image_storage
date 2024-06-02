@@ -16,8 +16,9 @@ def time_mock() -> Mock:
 
 class TestGetClientInfoByApiKey:
     @pytest.fixture(autouse=True)
-    def _setup(self, settings):
-        pass
+    def _setup(self, monkeypatch):
+        monkeypatch.setenv("CLIENTS_INFO__0__api_key", "TEST_API_KEY")
+        monkeypatch.setenv("CLIENTS_INFO__0__id", "test_client")
 
     def test_ok(self):
         client = get_client_info_by_api_key("TEST_API_KEY")

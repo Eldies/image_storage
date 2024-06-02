@@ -2,7 +2,7 @@
 import json
 import os
 
-from . import settings
+from .settings import get_settings
 
 
 class StorageManagerException(Exception):
@@ -11,7 +11,7 @@ class StorageManagerException(Exception):
 
 class StorageManager(object):
     def path_for_uuid(self, uuid: list[str]) -> str:
-        return os.path.join(settings.UPLOAD_FOLDER, *uuid)
+        return os.path.join(get_settings().upload_folder, *uuid)
 
     def uuid_exists(self, uuid: list[str]) -> bool:
         return os.path.exists(self.path_for_uuid(uuid))
