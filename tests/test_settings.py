@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import importlib
 from unittest.mock import patch
 
 import pytest
 
-from app.settings import get_settings
 from app.schemas import ClientInfo
+from app.settings import get_settings
 
 
 @pytest.mark.parametrize("folder", ["foo", "bar"])
