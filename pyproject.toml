@@ -7,7 +7,7 @@ authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
 [tool.poetry.dependencies]
 python = "~3.10.0"
 fastapi = "~0.111"
-uvicorn = "~0.29"
+uvicorn = "~0.30"
 base58 = "2.1.1"
 pydantic-settings = "~2.2.1"
 
