@@ -1,23 +1,25 @@
 # -*- coding: utf-8 -*-
+import importlib
 from unittest.mock import patch
 
 import pytest
 
-from app.settings import ClientInfo, get_settings
+from app import settings
 
 
 @pytest.mark.parametrize("folder", ["foo", "bar"])
 def test_upload_folder(folder):
     with patch("os.environ", dict(UPLOAD_FOLDER=folder)):
-        assert get_settings().upload_folder == folder
+        importlib.reload(settings)
+        assert settings.settings.upload_folder == folder
 
 
 @pytest.mark.parametrize(
-    "env,var",
+    "env,clients_info",
     [
         (
             dict(CLIENTS_INFO__0__api_key="api_key1", CLIENTS_INFO__0__id="cl"),
-            {"0": ClientInfo(id="cl", api_key="api_key1")},
+            {"0": dict(id="cl", api_key="api_key1")},
         ),
         (dict(), {}),
         (
@@ -30,13 +32,14 @@ def test_upload_folder(folder):
                 CLIENTS_INFO__2__id="cl3",
             ),
             {
-                "0": ClientInfo(id="cl1", api_key="api_key3"),
-                "1": ClientInfo(id="cl2", api_key="api_key2"),
-                "2": ClientInfo(id="cl3", api_key="api_key1"),
+                "0": dict(id="cl1", api_key="api_key3"),
+                "1": dict(id="cl2", api_key="api_key2"),
+                "2": dict(id="cl3", api_key="api_key1"),
             },
         ),
     ],
 )
-def test_client_info(env, var):
+def test_client_info(env, clients_info):
     with patch("os.environ", env):
-        assert get_settings().clients_info == var
+        importlib.reload(settings)
+        assert settings.settings.clients_info == settings.Settings(clients_info=clients_info).clients_info

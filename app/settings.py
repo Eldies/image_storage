@@ -15,11 +15,4 @@ class Settings(BaseSettings):
     clients_info: dict[str, ClientInfo] = {}
 
 
-_settings = None
-
-
-def get_settings() -> Settings:
-    global _settings
-    if _settings is None:
-        _settings = Settings()
-    return _settings
+settings = Settings()
