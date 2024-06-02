@@ -3,8 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app.schemas import ClientInfo
-from app.settings import get_settings
+from app.settings import ClientInfo, get_settings
 
 
 @pytest.mark.parametrize("folder", ["foo", "bar"])
@@ -18,7 +17,7 @@ def test_upload_folder(folder):
     [
         (
             dict(CLIENTS_INFO__0__api_key="api_key1", CLIENTS_INFO__0__id="cl"),
-            {"0": ClientInfo("cl", "api_key1")},
+            {"0": ClientInfo(id="cl", api_key="api_key1")},
         ),
         (dict(), {}),
         (
@@ -31,9 +30,9 @@ def test_upload_folder(folder):
                 CLIENTS_INFO__2__id="cl3",
             ),
             {
-                "0": ClientInfo("cl1", "api_key3"),
-                "1": ClientInfo("cl2", "api_key2"),
-                "2": ClientInfo("cl3", "api_key1"),
+                "0": ClientInfo(id="cl1", api_key="api_key3"),
+                "1": ClientInfo(id="cl2", api_key="api_key2"),
+                "2": ClientInfo(id="cl3", api_key="api_key1"),
             },
         ),
     ],

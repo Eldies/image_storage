@@ -4,8 +4,7 @@ import time
 
 import base58
 
-from .schemas import ClientInfo
-from .settings import get_settings
+from .settings import ClientInfo, get_settings
 
 
 def get_client_info_by_api_key(api_key: str) -> ClientInfo | None:

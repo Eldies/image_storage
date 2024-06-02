@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
+from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .schemas import ClientInfo
+
+class ClientInfo(BaseModel):
+    id: str
+    api_key: str
 
 
 class Settings(BaseSettings):
