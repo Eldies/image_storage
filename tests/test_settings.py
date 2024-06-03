@@ -5,36 +5,41 @@ from unittest.mock import patch
 import pytest
 
 from app import settings
-from app.schemas import ClientInfo
 
 
 @pytest.mark.parametrize("folder", ["foo", "bar"])
 def test_upload_folder(folder):
     with patch("os.environ", dict(UPLOAD_FOLDER=folder)):
         importlib.reload(settings)
-        assert settings.UPLOAD_FOLDER == folder
+        assert settings.settings.upload_folder == folder
 
 
 @pytest.mark.parametrize(
-    "env,var",
+    "env,clients_info",
     [
-        (dict(CLIENT_CREDENTIALS_1="cl:api_key1"), [ClientInfo("cl", "api_key1")]),
-        (dict(FOO="cl:api_key1"), []),
+        (
+            dict(CLIENTS_INFO__0__api_key="api_key1", CLIENTS_INFO__0__id="cl"),
+            {"0": dict(id="cl", api_key="api_key1")},
+        ),
+        (dict(), {}),
         (
             dict(
-                CLIENT_CREDENTIALS_1="cl1:api_key3",
-                CLIENT_CREDENTIALS_2="cl2:api_key2",
-                CLIENT_CREDENTIALS_3="cl3:api_key1",
+                CLIENTS_INFO__0__api_key="api_key3",
+                CLIENTS_INFO__0__id="cl1",
+                CLIENTS_INFO__1__api_key="api_key2",
+                CLIENTS_INFO__1__id="cl2",
+                CLIENTS_INFO__2__api_key="api_key1",
+                CLIENTS_INFO__2__id="cl3",
             ),
-            [
-                ClientInfo("cl1", "api_key3"),
-                ClientInfo("cl2", "api_key2"),
-                ClientInfo("cl3", "api_key1"),
-            ],
+            {
+                "0": dict(id="cl1", api_key="api_key3"),
+                "1": dict(id="cl2", api_key="api_key2"),
+                "2": dict(id="cl3", api_key="api_key1"),
+            },
         ),
     ],
 )
-def test_client_info(env, var):
+def test_client_info(env, clients_info):
     with patch("os.environ", env):
         importlib.reload(settings)
-        assert settings.CLIENTS_INFO == var
+        assert settings.settings.clients_info == settings.Settings(clients_info=clients_info).clients_info

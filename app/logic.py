@@ -4,12 +4,11 @@ import time
 
 import base58
 
-from . import settings
-from .schemas import ClientInfo
+from .settings import ClientInfo, settings
 
 
 def get_client_info_by_api_key(api_key: str) -> ClientInfo | None:
-    for client in settings.CLIENTS_INFO:
+    for client in settings.clients_info.values():
         if api_key == client.api_key:
             return client
     return None

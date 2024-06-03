@@ -7,8 +7,9 @@ authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
 [tool.poetry.dependencies]
 python = "~3.10.0"
 fastapi = "~0.111"
-uvicorn = "~0.29"
+uvicorn = "~0.30"
 base58 = "2.1.1"
+pydantic-settings = "~2.2.1"
 
 [tool.poetry.group.test]
 optional = true
@@ -46,3 +47,6 @@ target-version = ['py310']
 
 [tool.mypy]
 exclude = ['tests/',]
+disallow_untyped_defs = true
+no_implicit_optional = true
+check_untyped_defs = true

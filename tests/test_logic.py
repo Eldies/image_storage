@@ -4,7 +4,9 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from app import logic
 from app.logic import generate_image_uuid, get_client_info_by_api_key
+from app.settings import ClientInfo, Settings
 
 
 @pytest.fixture()
@@ -16,8 +18,9 @@ def time_mock() -> Mock:
 
 class TestGetClientInfoByApiKey:
     @pytest.fixture(autouse=True)
-    def _setup(self, settings):
-        pass
+    def _setup(self, monkeypatch):
+        settings = Settings(clients_info={"0": ClientInfo(id="test_client", api_key="TEST_API_KEY")})
+        monkeypatch.setattr(logic, "settings", settings)
 
     def test_ok(self):
         client = get_client_info_by_api_key("TEST_API_KEY")

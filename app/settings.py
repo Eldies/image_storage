@@ -1,12 +1,18 @@
 # -*- coding: utf-8 -*-
-import os
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-from .schemas import ClientInfo
 
-UPLOAD_FOLDER = os.environ.get("UPLOAD_FOLDER", "")
+class ClientInfo(BaseModel):
+    id: str
+    api_key: str
 
-CLIENTS_INFO = [
-    ClientInfo(id=os.environ[env_var].split(":")[0], api_key=os.environ[env_var].split(":")[1])
-    for env_var in os.environ
-    if "CLIENT_CREDENTIALS_" in env_var
-]
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_nested_delimiter="__")
+
+    upload_folder: str = ""
+    clients_info: dict[str, ClientInfo] = {}
+
+
+settings = Settings()
