@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
+import io
 import os
 
 import pytest
 import pytest_asyncio
+from PIL import Image
 
 
 @pytest.fixture()
@@ -63,10 +64,6 @@ class TestImageViewPost:
         assert os.path.isdir(os.path.join(self.upload_folder, "test_client", expected_filename))
         with open(os.path.join(self.upload_folder, "test_client", expected_filename, "file"), "rb") as file:
             assert file.read() == b"abcdef"
-        with open(os.path.join(self.upload_folder, "test_client", expected_filename, "data"), "r") as file:
-            assert json.loads(file.read()) == dict(
-                mimetype="image/jpeg",
-            )
 
 
 @pytest.mark.asyncio
@@ -74,17 +71,21 @@ class TestImageViewGet:
     @pytest_asyncio.fixture(autouse=True)
     def _setup(self, client, upload_folder):
         self.client = client
+
+        image = Image.new(mode="RGB", size=(3, 3))
+        img_stream = io.BytesIO()
+        image.save(img_stream, format="jpeg")
+        self.image_byte_array = img_stream.getvalue()
+
         os.makedirs(os.path.join(upload_folder, "some_client_id", "some_uuid"))
         with open(os.path.join(upload_folder, "some_client_id", "some_uuid", "file"), "wb") as f:
-            f.write(b"abcdef")
-        with open(os.path.join(upload_folder, "some_client_id", "some_uuid", "data"), "w") as f:
-            f.write(json.dumps(dict(mimetype="image/jpeg")))
+            f.write(self.image_byte_array)
 
     async def test_ok(self):
         response = await self.client.get("/v1/image/some_client_id/some_uuid")
         assert response.status_code == 200
         assert response.headers["Content-Type"] == "image/jpeg"
-        assert response.content == b"abcdef"
+        assert response.content == self.image_byte_array
 
     async def test_no_client_id(self):
         response = await self.client.get("/v1/image/some_uuid")

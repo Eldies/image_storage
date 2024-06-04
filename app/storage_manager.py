@@ -1,12 +1,21 @@
 # -*- coding: utf-8 -*-
-import json
+import io
 import os
+from dataclasses import dataclass
+
+from PIL import Image as PILImage
 
 from .settings import settings
 
 
 class StorageManagerException(Exception):
     pass
+
+
+@dataclass
+class Image:
+    data: bytes
+    mimetype: str
 
 
 class StorageManager(object):
@@ -16,30 +25,24 @@ class StorageManager(object):
     def uuid_exists(self, uuid: list[str]) -> bool:
         return os.path.exists(self.path_for_uuid(uuid))
 
-    def save_image(self, uuid: list[str], file_content: bytes, data: str | None = None) -> None:
+    def save_image(self, uuid: list[str], file_content: bytes) -> None:
         folder = self.path_for_uuid(uuid)
         os.makedirs(folder)
         with open(os.path.join(folder, "file"), "wb") as f:
             f.write(file_content)
-        if data:
-            with open(os.path.join(folder, "data"), "w") as f:
-                f.write(data)
 
-    def _read_data(self, uuid: list[str]) -> dict[str, str]:
-        path = os.path.join(self.path_for_uuid(uuid), "data")
-        if not os.path.exists(path):
-            return {}
-        with open(path, "r") as f:
-            return json.loads(f.read())
-
-    def _read_file(self, uuid: list[str]) -> bytes:
-        with open(os.path.join(self.path_for_uuid(uuid), "file"), "rb") as f:
-            return f.read()
-
-    def get_file(self, uuid: list[str]) -> tuple[bytes, dict]:
+    def get_image(self, uuid: list[str]) -> Image:
         if not self.uuid_exists(uuid):
             raise StorageManagerException("Not Found")
-        return self._read_file(uuid), self._read_data(uuid)
+        filename = os.path.join(self.path_for_uuid(uuid), "file")
+        with open(filename, "rb") as f:
+            data = f.read()
+        pil_image = PILImage.open(io.BytesIO(data))
+        assert pil_image.format is not None
+        return Image(
+            data=data,
+            mimetype=PILImage.MIME[pil_image.format],
+        )
 
 
 def get_storage_manager() -> StorageManager:

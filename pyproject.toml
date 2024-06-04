@@ -10,6 +10,7 @@ fastapi = "~0.111"
 uvicorn = "~0.30"
 base58 = "2.1.1"
 pydantic-settings = "~2.2.1"
+pillow = "~10.3.0"
 
 [tool.poetry.group.test]
 optional = true

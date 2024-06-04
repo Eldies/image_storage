@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
 import logging
 
 from fastapi import APIRouter, HTTPException
@@ -50,11 +49,6 @@ async def post_image(
     get_storage_manager().save_image(
         uuid=[client.id, filename],
         file_content=base64.b64decode(params.base64),
-        data=json.dumps(
-            dict(
-                mimetype="image/jpeg",
-            )
-        ),
     )
 
     return dict(
@@ -66,8 +60,8 @@ async def post_image(
 @router_api.get("/image/{client_id}/{uuid}")
 async def get_image(client_id: str, uuid: str) -> Response:
     try:
-        content, data = get_storage_manager().get_file([client_id, uuid])
-        return Response(content=content, media_type=data.get("mimetype"))
+        image = get_storage_manager().get_image([client_id, uuid])
+        return Response(content=image.data, media_type=image.mimetype)
     except StorageManagerException as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
