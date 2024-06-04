@@ -2,7 +2,8 @@ import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from app import app, logic, storage_manager
+from app import logic, storage_manager
+from app.main import app
 from app.settings import ClientInfo, Settings
 
 
