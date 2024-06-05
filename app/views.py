@@ -21,7 +21,7 @@ class PostImageRequest(BaseModel):
 
 
 @router_api.post("/image/")
-async def post_image(
+def post_image(
     request: Request,
     params: PostImageRequest,
 ) -> dict[str, str]:
@@ -58,7 +58,7 @@ async def post_image(
 
 
 @router_api.get("/image/{client_id}/{uuid}")
-async def get_image(client_id: str, uuid: str) -> Response:
+def get_image(client_id: str, uuid: str) -> Response:
     try:
         image = get_storage_manager().get_image([client_id, uuid])
         return Response(content=image.data, media_type=image.mimetype)
