@@ -4,11 +4,40 @@ services:
       context: .
       target: prod
     restart: always
+    depends_on:
+      create_access_key:
+        condition: service_completed_successfully
     environment:
       UPLOAD_FOLDER: /uploads
       CLIENTS_INFO__0__api_key: api_key
       CLIENTS_INFO__0__id: client
+      S3__URL: http://minio:9000/
+      S3__ACCESS_KEY: access-key
+      S3__SECRET_KEY: secret-key
+      S3__BUCKET: bucket
     ports:
       - 5000:5000
     volumes:
       - ./uploads:/uploads
+
+  minio:
+    image: docker.io/bitnami/minio
+    ports:
+      - 9001:9001
+    environment:
+      MINIO_ROOT_USER: username
+      MINIO_ROOT_PASSWORD: password
+      MINIO_DEFAULT_BUCKETS: bucket
+      MINIO_SCHEME: http
+      BITNAMI_DEBUG: true
+
+  create_access_key:
+    image: minio/mc
+    depends_on:
+      - minio
+    restart: on-failure
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc config host add myminio http://minio:9000 username password;
+      mc admin user svcacct add myminio username --access-key access-key --secret-key secret-key || true;
+      "

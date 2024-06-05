@@ -1,10 +1,9 @@
 # -*- coding: utf-8 -*-
 import base64
-import json
-import os
+import io
 
 import pytest
-import pytest_asyncio
+from PIL import Image
 
 
 @pytest.fixture()
@@ -17,10 +16,15 @@ def generate_image_uuid_mock(monkeypatch):
 
 @pytest.mark.asyncio
 class TestImageViewPost:
-    @pytest_asyncio.fixture(autouse=True)
-    async def _setup(self, client, generate_image_uuid_mock, upload_folder):
+    @pytest.fixture(autouse=True)
+    def _setup(self, client, generate_image_uuid_mock, mock_s3_bucket):
         self.client = client
-        self.upload_folder = upload_folder
+        self.bucket = mock_s3_bucket
+
+        self.image = Image.new(mode="RGB", size=(3, 3))
+        img_stream = io.BytesIO()
+        self.image.save(img_stream, format="jpeg")
+        self.image_byte_array = img_stream.getvalue()
 
     async def test_no_api_key(self):
         response = await self.client.post("/v1/image/", json={})
@@ -46,7 +50,7 @@ class TestImageViewPost:
     )
     async def test_ok(self, filename):
         data = dict()
-        data["base64"] = base64.b64encode(b"abcdef").decode()
+        data["base64"] = base64.b64encode(self.image_byte_array).decode()
         if filename:
             data["file_name"] = filename
         expected_filename = (filename if filename else "aaa") + "_generated"
@@ -60,31 +64,27 @@ class TestImageViewPost:
             "status": "ok",
             "uuid": "test_client/{}".format(expected_filename),
         }
-        assert os.path.isdir(os.path.join(self.upload_folder, "test_client", expected_filename))
-        with open(os.path.join(self.upload_folder, "test_client", expected_filename, "file"), "rb") as file:
-            assert file.read() == b"abcdef"
-        with open(os.path.join(self.upload_folder, "test_client", expected_filename, "data"), "r") as file:
-            assert json.loads(file.read()) == dict(
-                mimetype="image/jpeg",
-            )
+        assert self.bucket.Object(f"test_client/{expected_filename}").get()["Body"].read() == self.image_byte_array
 
 
 @pytest.mark.asyncio
 class TestImageViewGet:
-    @pytest_asyncio.fixture(autouse=True)
-    def _setup(self, client, upload_folder):
+    @pytest.fixture(autouse=True)
+    def _setup(self, client, mock_s3_bucket):
         self.client = client
-        os.makedirs(os.path.join(upload_folder, "some_client_id", "some_uuid"))
-        with open(os.path.join(upload_folder, "some_client_id", "some_uuid", "file"), "wb") as f:
-            f.write(b"abcdef")
-        with open(os.path.join(upload_folder, "some_client_id", "some_uuid", "data"), "w") as f:
-            f.write(json.dumps(dict(mimetype="image/jpeg")))
+        self.bucket = mock_s3_bucket
+
+        image = Image.new(mode="RGB", size=(3, 3))
+        img_stream = io.BytesIO()
+        image.save(img_stream, format="jpeg")
+        self.image_byte_array = img_stream.getvalue()
+        self.bucket.Object("some_client_id/some_uuid").put(Body=self.image_byte_array)
 
     async def test_ok(self):
         response = await self.client.get("/v1/image/some_client_id/some_uuid")
         assert response.status_code == 200
         assert response.headers["Content-Type"] == "image/jpeg"
-        assert response.content == b"abcdef"
+        assert response.content == self.image_byte_array
 
     async def test_no_client_id(self):
         response = await self.client.get("/v1/image/some_uuid")
