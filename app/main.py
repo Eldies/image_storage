@@ -38,7 +38,7 @@ async def put_images_to_s3() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator:
     # noinspection PyAsyncCall
-    # asyncio.create_task(put_images_to_s3())
+    asyncio.create_task(put_images_to_s3())
     yield
 
 
