@@ -8,7 +8,6 @@ services:
       create_access_key:
         condition: service_completed_successfully
     environment:
-      UPLOAD_FOLDER: /uploads
       CLIENTS_INFO__0__api_key: api_key
       CLIENTS_INFO__0__id: client
       S3__URL: http://minio:9000/
@@ -17,8 +16,6 @@ services:
       S3__BUCKET: bucket
     ports:
       - 5000:5000
-    volumes:
-      - ./uploads:/uploads
 
   minio:
     image: docker.io/bitnami/minio
@@ -38,6 +35,6 @@ services:
     restart: on-failure
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 username password;
+      /usr/bin/mc config host add myminio http://minio:9000 username password || exit 1;
       mc admin user svcacct add myminio username --access-key access-key --secret-key secret-key || true;
       "

@@ -1,14 +1,7 @@
 # -*- coding: utf-8 -*-
-import tempfile
-
 import boto3
 import pytest
 from moto import mock_aws
-
-
-@pytest.fixture()
-def upload_folder() -> str:
-    return tempfile.mkdtemp()
 
 
 @pytest.fixture(scope="session", autouse=True)

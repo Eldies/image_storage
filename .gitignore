@@ -128,7 +128,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-uploads/
 .idea/
 /coverage_html_report/
 poetry.lock

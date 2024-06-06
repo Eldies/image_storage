@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
 import logging
-import os
 from dataclasses import dataclass
 from functools import cache
 
@@ -29,33 +28,6 @@ def get_content_type_for_data(data: bytes) -> str:
     pil_image = PILImage.open(io.BytesIO(data))
     assert pil_image.format is not None
     return PILImage.MIME[pil_image.format]
-
-
-class StorageManager(object):
-    def path_for_uuid(self, uuid: list[str]) -> str:
-        return os.path.join(settings.upload_folder, *uuid)
-
-    def uuid_exists(self, uuid: list[str]) -> bool:
-        return os.path.exists(self.path_for_uuid(uuid))
-
-    def save_image(self, uuid: list[str], file_content: bytes) -> None:
-        folder = self.path_for_uuid(uuid)
-        os.makedirs(folder)
-        with open(os.path.join(folder, "file"), "wb") as f:
-            f.write(file_content)
-
-    def get_image(self, uuid: list[str]) -> Image:
-        if not self.uuid_exists(uuid):
-            raise StorageManagerException("Not Found")
-        filename = os.path.join(self.path_for_uuid(uuid), "file")
-        with open(filename, "rb") as f:
-            data = f.read()
-        pil_image = PILImage.open(io.BytesIO(data))
-        assert pil_image.format is not None
-        return Image(
-            data=data,
-            mimetype=PILImage.MIME[pil_image.format],
-        )
 
 
 class S3StorageManager(object):
@@ -102,8 +74,7 @@ class S3StorageManager(object):
             )
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
-                return StorageManager().get_image(uuid)
-                # raise StorageManagerException("Not Found")
+                raise StorageManagerException("Not Found")
             raise
 
 
