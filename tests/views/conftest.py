@@ -8,11 +8,10 @@ from app.settings import ClientInfo, S3Config, Settings
 
 
 @pytest.fixture(autouse=True)
-def mock_settings(monkeypatch, upload_folder, mock_s3_bucket):
+def mock_settings(monkeypatch, mock_s3_bucket):
     # TODO: dynamically find all modules which use settings
     settings = Settings(
         clients_info={"0": ClientInfo(id="test_client", api_key="TEST_API_KEY")},
-        upload_folder=upload_folder,
         s3=S3Config(
             bucket=mock_s3_bucket.name,
         ),

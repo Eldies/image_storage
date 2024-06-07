@@ -7,13 +7,6 @@ import pytest
 from app import settings
 
 
-@pytest.mark.parametrize("folder", ["foo", "bar"])
-def test_upload_folder(folder):
-    with patch("os.environ", dict(UPLOAD_FOLDER=folder)):
-        importlib.reload(settings)
-        assert settings.settings.upload_folder == folder
-
-
 @pytest.mark.parametrize(
     "env,clients_info",
     [
