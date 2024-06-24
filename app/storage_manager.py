@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-import io
 import logging
-from dataclasses import dataclass
-from functools import cache, cached_property
+from functools import cache
 
 import boto3
 from botocore.exceptions import ClientError
 from mypy_boto3_s3.service_resource import Object
-from PIL import Image as PILImage
 
+from .image import Image
 from .settings import settings
 
 logger = logging.getLogger("image-storage")
@@ -16,17 +14,6 @@ logger = logging.getLogger("image-storage")
 
 class StorageManagerException(Exception):
     pass
-
-
-@dataclass
-class Image:
-    data: bytes
-
-    @cached_property
-    def mimetype(self) -> str:
-        pil_image = PILImage.open(io.BytesIO(self.data))
-        assert pil_image.format is not None
-        return PILImage.MIME[pil_image.format]
 
 
 class S3StorageManager(object):
