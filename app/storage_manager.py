@@ -2,7 +2,7 @@
 import io
 import logging
 from dataclasses import dataclass
-from functools import cache
+from functools import cache, cached_property
 
 import boto3
 from botocore.exceptions import ClientError
@@ -21,13 +21,12 @@ class StorageManagerException(Exception):
 @dataclass
 class Image:
     data: bytes
-    mimetype: str
 
-
-def get_content_type_for_data(data: bytes) -> str:
-    pil_image = PILImage.open(io.BytesIO(data))
-    assert pil_image.format is not None
-    return PILImage.MIME[pil_image.format]
+    @cached_property
+    def mimetype(self) -> str:
+        pil_image = PILImage.open(io.BytesIO(self.data))
+        assert pil_image.format is not None
+        return PILImage.MIME[pil_image.format]
 
 
 class S3StorageManager(object):
@@ -44,10 +43,10 @@ class S3StorageManager(object):
     def object_for_uuid(self, uuid: list[str]) -> Object:
         return self.bucket.Object("/".join(uuid))
 
-    def save_image(self, uuid: list[str], file_content: bytes) -> None:
+    def save_image(self, uuid: list[str], image: Image) -> None:
         self.object_for_uuid(uuid).put(
-            Body=file_content,
-            ContentType=get_content_type_for_data(file_content),
+            Body=image.data,
+            ContentType=image.mimetype,
         )
 
     def list_uuids(self) -> list[list[str]]:
@@ -64,13 +63,8 @@ class S3StorageManager(object):
 
     def get_image(self, uuid: list[str]) -> Image:
         try:
-            logger.debug("logger - get image start")
-            data = self.object_for_uuid(uuid).get()["Body"].read()
-            mimetype = get_content_type_for_data(data)
-            logger.debug("logger - get image end")
             return Image(
-                data=data,
-                mimetype=mimetype,
+                data=self.object_for_uuid(uuid).get()["Body"].read(),
             )
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":

@@ -9,7 +9,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from .logic import generate_image_uuid, get_client_info_by_api_key
-from .storage_manager import StorageManagerException, get_storage_manager
+from .storage_manager import Image, StorageManagerException, get_storage_manager
 
 router_api = APIRouter(prefix="/v1")
 logger = logging.getLogger("image-storage")
@@ -48,7 +48,7 @@ def post_image(
 
     get_storage_manager().save_image(
         uuid=[client.id, filename],
-        file_content=base64.b64decode(params.base64),
+        image=Image(data=base64.b64decode(params.base64)),
     )
 
     return dict(

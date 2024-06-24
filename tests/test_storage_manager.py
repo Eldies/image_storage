@@ -8,6 +8,26 @@ from app import storage_manager
 from app.settings import S3Config, Settings
 
 
+class TestImage:
+    @pytest.fixture(autouse=True)
+    def _setup(self, mock_s3_bucket, monkeypatch):
+        self.pil_image = Image.new(mode="RGB", size=(3, 3))
+
+    @pytest.mark.parametrize(
+        "image_format",
+        [
+            "jpeg",
+            "png",
+            "bmp",
+        ],
+    )
+    def test_mimetype(self, image_format: str):
+        img_stream = io.BytesIO()
+        self.pil_image.save(img_stream, format=image_format)
+        image = storage_manager.Image(data=img_stream.getvalue())
+        assert image.mimetype == f"image/{image_format}"
+
+
 class TestS3StorageManager:
     @pytest.fixture(autouse=True)
     def _setup(self, mock_s3_bucket, monkeypatch):
@@ -15,13 +35,14 @@ class TestS3StorageManager:
         self.bucket = mock_s3_bucket
         self.manager = storage_manager.S3StorageManager()
 
-        self.image = Image.new(mode="RGB", size=(3, 3))
+        self.pil_image = Image.new(mode="RGB", size=(3, 3))
         img_stream = io.BytesIO()
-        self.image.save(img_stream, format="jpeg")
+        self.pil_image.save(img_stream, format="jpeg")
         self.image_byte_array = img_stream.getvalue()
 
     def test_save_image_ok(self):
-        self.manager.save_image(["client", "some_uuid"], self.image_byte_array)
+        image = storage_manager.Image(data=self.image_byte_array)
+        self.manager.save_image(["client", "some_uuid"], image)
         created_object = self.bucket.Object("client/some_uuid").get()
         assert created_object["Body"].read() == self.image_byte_array
         assert created_object["ContentType"] == "image/jpeg"
