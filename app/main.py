@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import logging
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator
 
 from fastapi import FastAPI, HTTPException
+from prometheus_fastapi_instrumentator import Instrumentator
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -10,7 +13,14 @@ from . import views
 logger = logging.getLogger("image-storage")
 
 
-app = FastAPI()
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator:
+    instrumentator.expose(app, tags=["metrics"])
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
+instrumentator = Instrumentator().instrument(app)
 
 
 @app.exception_handler(400)

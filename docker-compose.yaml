@@ -7,6 +7,8 @@ services:
     depends_on:
       create_access_key:
         condition: service_completed_successfully
+    volumes:
+      - ./app:/src/app
     environment:
       CLIENTS_INFO__0__api_key: api_key
       CLIENTS_INFO__0__id: client
