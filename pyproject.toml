@@ -1,8 +1,7 @@
 [tool.poetry]
-name = "image_storage"
-version = "0.1.0"
-description = ""
+package-mode = false
 authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
+repository = "https://github.com/Eldies/image_storage"
 
 [tool.poetry.dependencies]
 python = "~3.10.0"
