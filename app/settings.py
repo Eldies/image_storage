@@ -17,12 +17,21 @@ class S3Config(BaseModel):
     bucket: str = ""
 
 
+class SentryConfig(BaseModel):
+    dsn: str = ""
+
+
 class Settings(BaseSettings):
+    environment: str = "debug"
+    version: str = "0.2.0"
+
     model_config = SettingsConfigDict(env_nested_delimiter="__")
 
     clients_info: dict[str, ClientInfo] = {}
 
     s3: S3Config = S3Config()
+
+    sentry: SentryConfig = SentryConfig()
 
 
 settings = Settings()
