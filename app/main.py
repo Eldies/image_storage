@@ -33,6 +33,7 @@ instrumentator = Instrumentator().instrument(app)
 
 @app.exception_handler(400)
 @app.exception_handler(401)
+@app.exception_handler(403)
 @app.exception_handler(404)
 async def exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     return JSONResponse(

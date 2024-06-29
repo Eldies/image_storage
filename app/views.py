@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
 import base64
 import logging
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.security import APIKeyHeader
 from pydantic import BaseModel
 from starlette import status
-from starlette.requests import Request
 from starlette.responses import Response
 
 from .image import Image
 from .logic import generate_image_uuid, get_client_info_by_api_key
+from .settings import ClientInfo
 from .storage_manager import StorageManagerException, get_storage_manager
 
 router_api = APIRouter(prefix="/v1")
@@ -21,23 +23,22 @@ class PostImageRequest(BaseModel):
     base64: bytes | None = None
 
 
-@router_api.post("/image/")
-def post_image(
-    request: Request,
-    params: PostImageRequest,
-) -> dict[str, str]:
-    api_key = request.headers.get("X-API-KEY")
+def validate_client(api_key: str = Depends(APIKeyHeader(name="X-API-KEY"))) -> ClientInfo:
     logger.debug('Provided api_key: "{}"'.format(api_key))
-    client = None
-    if api_key is not None:
-        client = get_client_info_by_api_key(api_key)
-
+    client = get_client_info_by_api_key(api_key)
     if client is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
         )
+    return client
 
+
+@router_api.post("/image/")
+def post_image(
+    client: Annotated[ClientInfo, Depends(validate_client)],
+    params: PostImageRequest,
+) -> dict[str, str]:
     if not params.base64:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

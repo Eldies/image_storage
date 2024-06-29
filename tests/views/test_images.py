@@ -28,7 +28,7 @@ class TestImageViewPost:
 
     async def test_no_api_key(self):
         response = await self.client.post("/v1/image/", json={})
-        assert response.status_code == 401
+        assert response.status_code == 403
         assert response.json() == {"status": "error", "error": "Not authenticated"}
 
     async def test_wrong_api_key(self):
