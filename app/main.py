@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from . import views
+from .schemas import ErrorResponse
 from .settings import settings
 
 logger = logging.getLogger("image-storage")
@@ -38,10 +39,7 @@ instrumentator = Instrumentator().instrument(app)
 async def exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
-        content=dict(
-            status="error",
-            error=exc.detail,
-        ),
+        content=ErrorResponse(error=exc.detail).dict(),
     )
 
 

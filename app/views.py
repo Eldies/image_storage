@@ -5,22 +5,17 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import APIKeyHeader
-from pydantic import BaseModel
 from starlette import status
 from starlette.responses import Response
 
 from .image import Image
 from .logic import generate_image_uuid, get_client_info_by_api_key
+from .schemas import ErrorResponse, PostImageRequest, PostImageResponse
 from .settings import ClientInfo
 from .storage_manager import StorageManagerException, get_storage_manager
 
 router_api = APIRouter(prefix="/v1")
 logger = logging.getLogger("image-storage")
-
-
-class PostImageRequest(BaseModel):
-    file_name: str | None = None
-    base64: bytes | None = None
 
 
 def validate_client(api_key: str = Depends(APIKeyHeader(name="X-API-KEY"))) -> ClientInfo:
@@ -34,11 +29,17 @@ def validate_client(api_key: str = Depends(APIKeyHeader(name="X-API-KEY"))) -> C
     return client
 
 
-@router_api.post("/image/")
+@router_api.post(
+    "/image/",
+    responses={
+        401: {"model": ErrorResponse},
+        403: {"model": ErrorResponse},
+    },
+)
 def post_image(
     client: Annotated[ClientInfo, Depends(validate_client)],
     params: PostImageRequest,
-) -> dict[str, str]:
+) -> PostImageResponse:
     if not params.base64:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -53,13 +54,16 @@ def post_image(
         image=Image(data=base64.b64decode(params.base64)),
     )
 
-    return dict(
-        status="ok",
+    return PostImageResponse(
         uuid="{}/{}".format(client.id, filename),
     )
 
 
-@router_api.get("/image/{client_id}/{uuid}")
+@router_api.get(
+    "/image/{client_id}/{uuid}",
+    response_class=Response,
+    responses={404: {"model": ErrorResponse}},
+)
 def get_image(client_id: str, uuid: str) -> Response:
     try:
         image = get_storage_manager().get_image([client_id, uuid])
