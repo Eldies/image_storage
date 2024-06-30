@@ -36,10 +36,19 @@ class TestImageViewPost:
         assert response.status_code == 401
         assert response.json() == {"status": "error", "error": "Not authenticated"}
 
-    async def test_no_file(self):
+    async def test_no_image(self):
         response = await self.client.post("/v1/image/", json={}, headers={"X-API-KEY": "TEST_API_KEY"})
-        assert response.status_code == 400
-        assert response.json() == {"status": "error", "error": "No file"}
+        assert response.status_code == 422
+        assert response.json() == {
+            "detail": [
+                {
+                    "input": {},
+                    "loc": ["body", "base64"],
+                    "msg": "Field required",
+                    "type": "missing",
+                },
+            ],
+        }
 
     @pytest.mark.parametrize(
         "filename",

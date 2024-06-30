@@ -40,12 +40,6 @@ def post_image(
     client: Annotated[ClientInfo, Depends(validate_client)],
     params: PostImageRequest,
 ) -> PostImageResponse:
-    if not params.base64:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No file",
-        )
-
     filename = generate_image_uuid(params.file_name)
     logger.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
 

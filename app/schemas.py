@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class PostImageRequest(BaseModel):
     file_name: str | None = None
-    base64: bytes | None = None
+    base64: bytes
 
 
 class PostImageResponse(BaseModel):
