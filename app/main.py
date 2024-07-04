@@ -39,7 +39,7 @@ instrumentator = Instrumentator().instrument(app)
 async def exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
-        content=ErrorResponse(error=exc.detail).dict(),
+        content=ErrorResponse(error=exc.detail).model_dump(),
     )
 
 
