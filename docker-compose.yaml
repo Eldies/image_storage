@@ -21,7 +21,7 @@ services:
       - 5000:5000
 
   minio:
-    image: docker.io/bitnami/minio
+    image: docker.io/bitnamilegacy/minio
     ports:
       - 9001:9001
     environment:
@@ -38,6 +38,6 @@ services:
     restart: on-failure
     entrypoint: >
       /bin/sh -c "
-      /usr/bin/mc config host add myminio http://minio:9000 username password || exit 1;
+      /usr/bin/mc alias set myminio http://minio:9000 username password || exit 1;
       mc admin user svcacct add myminio username --access-key access-key --secret-key secret-key || true;
       "

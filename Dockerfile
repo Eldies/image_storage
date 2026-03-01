@@ -4,7 +4,7 @@ RUN poetry self add poetry-plugin-export
 RUN poetry config virtualenvs.create false
 WORKDIR /src
 COPY pyproject.toml ./
-RUN poetry export --no-interaction --output requirements.txt
+RUN poetry export --no-interaction --output requirements.txt --without-hashes
 
 FROM base-poetry AS dev
 RUN poetry install --no-root --no-interaction --with test,dev
