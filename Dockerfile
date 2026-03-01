@@ -1,14 +1,15 @@
-FROM python:3.10-alpine as base-poetry
+FROM python:3.10-alpine AS base-poetry
 RUN pip install poetry
+RUN poetry self add poetry-plugin-export
 RUN poetry config virtualenvs.create false
 WORKDIR /src
 COPY pyproject.toml ./
 RUN poetry export --no-interaction --output requirements.txt
 
-FROM base-poetry as dev
+FROM base-poetry AS dev
 RUN poetry install --no-root --no-interaction --with test,dev
 
-FROM python:3.10-alpine as prod
+FROM python:3.10-alpine AS prod
 WORKDIR /src
 COPY --from=base-poetry /src/requirements.txt ./requirements.txt
 RUN pip install --no-compile --no-cache-dir -r requirements.txt
