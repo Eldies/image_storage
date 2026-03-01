@@ -1,5 +1,5 @@
 FROM python:3.10-alpine AS base-poetry
-RUN pip install poetry
+RUN pip install poetry==2.3.2
 RUN poetry self add poetry-plugin-export
 RUN poetry config virtualenvs.create false
 WORKDIR /src
