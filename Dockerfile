@@ -3,7 +3,7 @@ RUN pip install poetry==2.3.2
 RUN poetry self add poetry-plugin-export
 RUN poetry config virtualenvs.create false
 WORKDIR /src
-COPY pyproject.toml ./
+COPY pyproject.toml poetry.lock ./
 RUN poetry export --no-interaction --output requirements.txt --without-hashes
 
 FROM base-poetry AS dev

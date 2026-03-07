@@ -130,4 +130,3 @@ dmypy.json
 
 .idea/
 /coverage_html_report/
-poetry.lock
