@@ -1,13 +1,18 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
+
 import logging
 from functools import cache
+from typing import TYPE_CHECKING
 
 import boto3
 from botocore.exceptions import ClientError
-from mypy_boto3_s3.service_resource import Object
 
 from .image import Image
 from .settings import settings
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3.service_resource import Object
 
 logger = logging.getLogger("image-storage")
 
