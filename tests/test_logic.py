@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import random
+from typing import Any, Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -10,7 +11,7 @@ from app.settings import ClientInfo, Settings
 
 
 @pytest.fixture()
-def time_mock() -> Mock:
+def time_mock() -> Generator[Mock, Any, None]:
     mock = Mock(return_value=1657234419.0)
     with patch("time.time", mock):
         yield mock
@@ -38,28 +39,28 @@ class TestGenerateImageUUID:
         self.time_mock = time_mock
         random.seed(0)
 
-    def test_name(self):
+    def test_with_name(self):
         assert generate_image_uuid("FOO") == "FOO-wRqkXu8ab9"
 
-    def test_none(self):
-        assert generate_image_uuid(None) == "wRqkXu8ab9"
+    def test_without_name(self):
+        assert generate_image_uuid() == "wRqkXu8ab9"
 
     def test_empty_string(self):
         assert generate_image_uuid("") == "wRqkXu8ab9"
 
     def test_changes_with_millisecond(self):
-        assert generate_image_uuid(None) == "wRqkXu8ab9"
+        assert generate_image_uuid() == "wRqkXu8ab9"
         self.time_mock.return_value += 0.001
         random.seed(0)
-        assert generate_image_uuid(None) == "wRqkXu8abA"
+        assert generate_image_uuid() == "wRqkXu8abA"
         # checking that it does not change just because of calling this function again
         random.seed(0)
-        assert generate_image_uuid(None) == "wRqkXu8abA"
+        assert generate_image_uuid() == "wRqkXu8abA"
 
     def test_changes_with_random(self):
-        assert generate_image_uuid(None) == "wRqkXu8ab9"
+        assert generate_image_uuid() == "wRqkXu8ab9"
         random.seed(1)
-        assert generate_image_uuid(None) == "9dwkXu8ab9"
+        assert generate_image_uuid() == "9dwkXu8ab9"
         # checking that it does not change just because of calling this function again
         random.seed(1)
-        assert generate_image_uuid(None) == "9dwkXu8ab9"
+        assert generate_image_uuid() == "9dwkXu8ab9"

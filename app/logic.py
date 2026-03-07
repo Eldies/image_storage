@@ -14,7 +14,7 @@ def get_client_info_by_api_key(api_key: str) -> ClientInfo | None:
     return None
 
 
-def generate_image_uuid(suggested_filename: str | None) -> str:
+def generate_image_uuid(suggested_filename: str | None = None) -> str:
     """
     Generates uuid, tries to make it unique:
         uses timestamp in milliseconds, so uuids generated in different milliseconds should differ
