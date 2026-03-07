@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from logging.config import dictConfig
 
-from .logging_config import LogConfig
+from .logging_config import LOGGING_CONFIG
 
-dictConfig(LogConfig().dict())
+dictConfig(LOGGING_CONFIG)
