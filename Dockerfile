@@ -14,4 +14,5 @@ COPY --from=base-poetry /src/requirements.txt ./requirements.txt
 RUN pip install --no-compile --no-cache-dir -r requirements.txt
 COPY ./app app
 EXPOSE 5000
-CMD uvicorn app.main:app --host 0.0.0.0 --port 5000 --use-colors
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000", "--use-colors"]
