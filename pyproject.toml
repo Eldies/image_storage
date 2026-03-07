@@ -4,7 +4,7 @@ authors = ["Dmitry Lavrukhin <dlavrukhin@yandex.ru>"]
 repository = "https://github.com/Eldies/image_storage"
 
 [tool.poetry.dependencies]
-python = "~3.10.0"
+python = "~3.14"
 fastapi = ">=0.135"
 uvicorn = ">=0.41.0"
 base58 = "2.1.1"
