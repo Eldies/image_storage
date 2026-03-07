@@ -52,11 +52,27 @@ addopts ="""
     -p no:cacheprovider
     --strict-markers
     --disable-socket --allow-unix-socket
+    --cov --cov-config=pyproject.toml
 """
+
+[tool.coverage.run]
+data_file = ".cache/.coverage"
+source = ["app"]
+omit = ["tests/*"]
+branch = true
+concurrency = ["thread"]
+
+[tool.coverage.report]
+precision = 2
+exclude_lines = [
+  "pragma: no cover",
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]
 
 [tool.black]
 line-length = 120
-target-version = ['py310']
+target-version = ['py314']
 
 [tool.mypy]
 exclude = ['tests/',]

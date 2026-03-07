@@ -8,9 +8,6 @@ WORKDIR /src
 COPY pyproject.toml poetry.lock ./
 RUN poetry export --no-interaction --output requirements.txt --without-hashes
 
-FROM base-poetry AS dev
-RUN poetry install --no-root --no-interaction --with test
-
 FROM python:${PYTHON_VERSION}-alpine AS prod
 WORKDIR /src
 COPY --from=base-poetry /src/requirements.txt ./requirements.txt
