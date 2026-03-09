@@ -12,7 +12,7 @@ from .image import Image
 from .settings import settings
 
 if TYPE_CHECKING:
-    from mypy_boto3_s3.service_resource import Object
+    from mypy_boto3_s3.service_resource import Object  # pragma: no cover
 
 logger = logging.getLogger("image-storage")
 
