@@ -1,18 +1,23 @@
 ARG PYTHON_VERSION=3.14
 
-FROM python:${PYTHON_VERSION}-alpine AS base-poetry
-RUN pip install poetry==2.3.2
-RUN poetry self add poetry-plugin-export
-RUN poetry config virtualenvs.create false
+FROM python:${PYTHON_VERSION}-alpine AS builder
+RUN pip install --no-cache-dir poetry==2.3.2 \
+    && poetry self add poetry-plugin-export \
+    && poetry config virtualenvs.create false
+
 WORKDIR /src
 COPY pyproject.toml poetry.lock ./
+
 RUN poetry export --no-interaction --output requirements.txt --without-hashes
+RUN pip wheel --wheel-dir /tmp/wheelhouse -r requirements.txt
 
 FROM python:${PYTHON_VERSION}-alpine AS prod
 WORKDIR /src
-COPY --from=base-poetry /src/requirements.txt ./requirements.txt
-RUN pip install --no-compile --no-cache-dir -r requirements.txt
-COPY ./app app
-EXPOSE 5000
 
+RUN --mount=from=builder,source=/tmp/wheelhouse,target=/mnt/wheelhouse,ro \
+    pip install --no-cache-dir --no-index /mnt/wheelhouse/*
+
+COPY ./app app
+
+EXPOSE 5000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "5000", "--use-colors"]
