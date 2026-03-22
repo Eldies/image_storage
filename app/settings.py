@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
