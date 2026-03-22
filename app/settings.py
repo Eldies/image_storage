@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,7 +19,7 @@ class S3Config(BaseModel):
 
 class StorageConfig(BaseModel):
     type: Literal["s3"] = "s3"
-    s3: Optional[S3Config] = None
+    s3: S3Config = S3Config()
 
 
 class SentryConfig(BaseModel):
