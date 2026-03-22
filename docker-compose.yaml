@@ -12,10 +12,11 @@ services:
     environment:
       CLIENTS_INFO__0__api_key: api_key
       CLIENTS_INFO__0__id: client
-      S3__URL: http://minio:9000/
-      S3__ACCESS_KEY: access-key
-      S3__SECRET_KEY: secret-key
-      S3__BUCKET: bucket
+      STORAGE__TYPE: s3
+      STORAGE__S3__URL: http://minio:9000/
+      STORAGE__S3__ACCESS_KEY: access-key
+      STORAGE__S3__SECRET_KEY: secret-key
+      STORAGE__S3__BUCKET: bucket
       SENTRY__DSN: ${SENTRY_DSN}
     ports:
       - 5000:5000

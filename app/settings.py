@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional
+from typing import Optional, Literal
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,6 +17,11 @@ class S3Config(BaseModel):
     bucket: str = ""
 
 
+class StorageConfig(BaseModel):
+    type: Literal["s3"] = "s3"
+    s3: Optional[S3Config] = None
+
+
 class SentryConfig(BaseModel):
     dsn: str = ""
 
@@ -29,7 +34,7 @@ class Settings(BaseSettings):
 
     clients_info: dict[str, ClientInfo] = {}
 
-    s3: S3Config = S3Config()
+    storage: StorageConfig = StorageConfig()
 
     sentry: SentryConfig = SentryConfig()
 

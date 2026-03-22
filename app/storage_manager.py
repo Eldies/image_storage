@@ -21,16 +21,30 @@ class StorageManagerException(Exception):
     pass
 
 
-class S3StorageManager(object):
+class StorageManagerInterface:
+    def save_image(self, uuid: list[str], image: Image) -> None:
+        raise NotImplementedError
+
+    def list_uuids(self) -> list[list[str]]:
+        raise NotImplementedError
+
+    def uuid_exists(self, uuid: list[str]) -> bool:
+        raise NotImplementedError
+
+    def get_image(self, uuid: list[str]) -> Image:
+        raise NotImplementedError
+
+
+class S3StorageManager(StorageManagerInterface):
     def __init__(self) -> None:
         s3_resource = boto3.resource(
             "s3",
-            endpoint_url=settings.s3.url,
-            aws_access_key_id=settings.s3.access_key,
-            aws_secret_access_key=settings.s3.secret_key,
+            endpoint_url=settings.storage.s3.url,
+            aws_access_key_id=settings.storage.s3.access_key,
+            aws_secret_access_key=settings.storage.s3.secret_key,
             aws_session_token=None,
         )
-        self.bucket = s3_resource.Bucket(settings.s3.bucket)
+        self.bucket = s3_resource.Bucket(settings.storage.s3.bucket)
 
     def object_for_uuid(self, uuid: list[str]) -> Object:
         return self.bucket.Object("/".join(uuid))
@@ -66,4 +80,6 @@ class S3StorageManager(object):
 
 @cache
 def get_storage_manager() -> S3StorageManager:
-    return S3StorageManager()
+    if settings.storage.type == "s3":
+        return S3StorageManager()
+    raise NotImplementedError

@@ -6,13 +6,15 @@ from PIL import Image as PILImage
 
 from app import storage_manager
 from app.image import Image
-from app.settings import S3Config, Settings
+from app.settings import S3Config, Settings, StorageConfig
 
 
 class TestS3StorageManager:
     @pytest.fixture(autouse=True)
     def _setup(self, mock_s3_bucket, monkeypatch):
-        monkeypatch.setattr(storage_manager, "settings", Settings(s3=S3Config(bucket=mock_s3_bucket.name)))
+        monkeypatch.setattr(
+            storage_manager, "settings", Settings(storage=StorageConfig(s3=S3Config(bucket=mock_s3_bucket.name)))
+        )
         self.bucket = mock_s3_bucket
         self.manager = storage_manager.S3StorageManager()
 
