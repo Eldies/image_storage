@@ -20,6 +20,7 @@ class TestGetClientInfoByApiKey:
     def test_ok(self, mock_settings):
         mock_settings.clients_info["0"] = ClientInfo(id="test_client", api_key="TEST_API_KEY")
         client = get_client_info_by_api_key("TEST_API_KEY")
+        assert client is not None
         assert client.id == "test_client"
         assert client.api_key == "TEST_API_KEY"
 
