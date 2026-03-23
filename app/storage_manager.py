@@ -9,7 +9,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 from .image import Image
-from .settings import settings
+from .settings import StorageType, settings
 
 if TYPE_CHECKING:
     from mypy_boto3_s3.service_resource import Object  # pragma: no cover
@@ -80,6 +80,6 @@ class S3StorageManager(StorageManagerInterface):
 
 @cache
 def get_storage_manager() -> S3StorageManager:
-    if settings.storage.type == "s3":
+    if settings.storage.type == StorageType.S3:
         return S3StorageManager()
     raise NotImplementedError

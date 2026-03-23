@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from app import settings
+from app.settings import Settings
 
 
 @pytest.mark.parametrize(
@@ -34,5 +34,5 @@ from app import settings
 )
 def test_client_info(env, clients_info):
     with patch("os.environ", env):
-        importlib.reload(settings)
-        assert settings.settings.clients_info == settings.Settings(clients_info=clients_info).clients_info
+        parsed_clients_info = {key: dict(value) for key, value in Settings().clients_info.items()}
+        assert parsed_clients_info == clients_info

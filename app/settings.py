@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
-from typing import Literal, Optional
+from enum import Enum
+from functools import cache
+from typing import Any, Optional
 
 from pydantic import BaseModel
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -17,8 +19,12 @@ class S3Config(BaseModel):
     bucket: str = ""
 
 
+class StorageType(str, Enum):
+    S3 = "s3"
+
+
 class StorageConfig(BaseModel):
-    type: Literal["s3"] = "s3"
+    type: StorageType = StorageType.S3
     s3: S3Config = S3Config()
 
 
@@ -39,4 +45,14 @@ class Settings(BaseSettings):
     sentry: SentryConfig = SentryConfig()
 
 
-settings = Settings()
+@cache
+def get_settings() -> Settings:
+    return Settings()
+
+
+class LazySettings:
+    def __getattr__(self, name: str) -> Any:
+        return getattr(get_settings(), name)
+
+
+settings: Settings = LazySettings()  # type: ignore[assignment]
