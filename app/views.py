@@ -8,7 +8,7 @@ from fastapi.security import APIKeyHeader
 from starlette import status
 from starlette.responses import Response
 
-from .image import Image
+from .image import Image, ImageException
 from .logic import generate_image_uuid, get_client_info_by_api_key
 from .schemas import ErrorResponse, PostImageRequest, PostImageResponse
 from .settings import ClientInfo
@@ -43,9 +43,22 @@ def post_image(
     filename = generate_image_uuid(params.file_name)
     logger.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
 
+    try:
+        image = Image(data=base64.b64decode(params.base64))
+        if not image.format:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail="Cannot determine image format",
+            )
+    except ImageException as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=str(*e.args),
+        )
+
     get_storage_manager().save_image(
         uuid=[client.id, filename],
-        image=Image(data=base64.b64decode(params.base64)),
+        image=image,
     )
 
     return PostImageResponse(

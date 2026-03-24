@@ -49,6 +49,13 @@ class TestImageViewPost:
             ],
         }
 
+    async def test_empty_base64(self):
+        response = await self.client.post("/v1/image/", json={"base64": ""}, headers={"X-API-KEY": "TEST_API_KEY"})
+        assert response.status_code == 422
+        assert response.json() == {
+            "detail": "Cannot identify image file",
+        }
+
     @pytest.mark.parametrize(
         "filename",
         [
