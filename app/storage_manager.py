@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from functools import cache
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 import boto3
@@ -23,9 +24,6 @@ class StorageManagerException(Exception):
 
 class StorageManagerInterface:
     def save_image(self, uuid: list[str], image: Image) -> None:
-        raise NotImplementedError
-
-    def list_uuids(self) -> list[list[str]]:
         raise NotImplementedError
 
     def uuid_exists(self, uuid: list[str]) -> bool:
@@ -55,9 +53,6 @@ class S3StorageManager(StorageManagerInterface):
             ContentType=image.mimetype,
         )
 
-    def list_uuids(self) -> list[list[str]]:
-        return [object_summary.key.split("/") for object_summary in self.bucket.objects.all()]
-
     def uuid_exists(self, uuid: list[str]) -> bool:
         try:
             self.object_for_uuid(uuid).load()
@@ -76,6 +71,28 @@ class S3StorageManager(StorageManagerInterface):
             if e.response["Error"]["Code"] == "NoSuchKey":
                 raise StorageManagerException("Not Found")
             raise
+
+
+class DiskStorageManager(StorageManagerInterface):
+    @staticmethod
+    def image_path_for_uuid(uuid: list[str]) -> Path:
+        return Path(settings.storage.disk.path, *uuid, "file")
+
+    def save_image(self, uuid: list[str], image: Image) -> None:
+        path = self.image_path_for_uuid(uuid)
+        path.parent.mkdir(parents=True, exist_ok=False)
+        with open(path, "wb") as f:
+            f.write(image.data)
+
+    def uuid_exists(self, uuid: list[str]) -> bool:
+        return self.image_path_for_uuid(uuid).exists()
+
+    def get_image(self, uuid: list[str]) -> Image:
+        path = self.image_path_for_uuid(uuid)
+        if not path.exists():
+            raise StorageManagerException("Not Found")
+        with open(path, "rb") as f:
+            return Image(data=f.read())
 
 
 @cache

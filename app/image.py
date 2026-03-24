@@ -10,7 +10,11 @@ class Image:
     data: bytes
 
     @cached_property
-    def mimetype(self) -> str:
+    def format(self) -> str:
         pil_image = PILImage.open(io.BytesIO(self.data))
         assert pil_image.format is not None
-        return PILImage.MIME[pil_image.format]
+        return pil_image.format
+
+    @cached_property
+    def mimetype(self) -> str:
+        return PILImage.MIME[self.format]

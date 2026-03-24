@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 import io
+import os
+import tempfile
+from pathlib import Path
 
 import pytest
 from PIL import Image as PILImage
@@ -39,12 +42,48 @@ class TestS3StorageManager:
         assert self.manager.uuid_exists(["some_uuid"]) is True
         assert self.manager.uuid_exists(["some_other_uuid"]) is False
 
-    def test_list_uuids(self):
-        assert self.manager.list_uuids() == []
-        self.bucket.Object("some_uuid").put(Body=self.image_byte_array)
-        assert self.manager.list_uuids() == [["some_uuid"]]
-        self.bucket.Object("some/other/uuid").put(Body=self.image_byte_array)
-        assert sorted(self.manager.list_uuids()) == [["some", "other", "uuid"], ["some_uuid"]]
+    def test_get_image_unknown_key(self):
+        with pytest.raises(storage_manager.StorageManagerException):
+            self.manager.get_image(["some_uuid"])
+
+
+class TestDiskStorageManager:
+    @pytest.fixture(autouse=True)
+    def _setup(self, mock_settings):
+        self.pil_image = PILImage.new(mode="RGB", size=(3, 3))
+        img_stream = io.BytesIO()
+        self.pil_image.save(img_stream, format="jpeg")
+        self.image_byte_array = img_stream.getvalue()
+
+        mock_settings.storage.type = StorageType.DISK
+        with tempfile.TemporaryDirectory() as folder:
+            mock_settings.storage.disk.path = self.folder = folder
+            self.manager = storage_manager.DiskStorageManager()
+            yield
+
+    def _create_image_for_uuid(self, uuid):
+        folder = Path(self.folder, *uuid)
+        folder.mkdir(parents=True, exist_ok=False)
+        with open(folder / "file", "wb") as f:
+            f.write(self.image_byte_array)
+
+    def test_save_image_ok(self):
+        self.manager.save_image(["client", "some_uuid"], Image(data=self.image_byte_array))
+        with open(os.path.join(self.folder, "client", "some_uuid", "file"), "rb") as f:
+            created_bytes = f.read()
+        assert created_bytes == self.image_byte_array
+
+    def test_get_image(self):
+        uuid = ["client", "some_uuid"]
+        self._create_image_for_uuid(uuid)
+        result_image = self.manager.get_image(uuid)
+        assert result_image.data == self.image_byte_array
+        assert result_image.mimetype == "image/jpeg"
+
+    def test_uuid_exists(self):
+        self._create_image_for_uuid(["some_uuid"])
+        assert self.manager.uuid_exists(["some_uuid"]) is True
+        assert self.manager.uuid_exists(["some_other_uuid"]) is False
 
     def test_get_image_unknown_key(self):
         with pytest.raises(storage_manager.StorageManagerException):

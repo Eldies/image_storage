@@ -12,20 +12,26 @@ class ClientInfo(BaseModel):
     api_key: str
 
 
-class S3Config(BaseModel):
+class StorageConfigS3(BaseModel):
     url: Optional[str] = None
     access_key: str = ""
     secret_key: str = ""
     bucket: str = ""
 
 
+class StorageConfigDisk(BaseModel):
+    path: str = ""
+
+
 class StorageType(str, Enum):
     S3 = "s3"
+    DISK = "disk"
 
 
 class StorageConfig(BaseModel):
     type: StorageType = StorageType.S3
-    s3: S3Config = S3Config()
+    s3: StorageConfigS3 = StorageConfigS3()
+    disk: StorageConfigDisk = StorageConfigDisk()
 
 
 class SentryConfig(BaseModel):
