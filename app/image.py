@@ -15,5 +15,6 @@ class Image:
         assert pil_image.format is not None
         return pil_image.format
 
+    @property
     def mimetype(self) -> str:
         return PILImage.MIME[self.format]
