@@ -10,6 +10,26 @@ from PIL import Image as PILImage
 from app import storage_manager
 from app.image import Image
 from app.settings import StorageType
+from app.storage_manager import StorageManagerInterface
+
+
+class TestGetStorageManager:
+    EXPECTED_CLASS: dict[StorageType, type[StorageManagerInterface]] = {
+        StorageType.S3: storage_manager.S3StorageManager,
+        StorageType.DISK: storage_manager.DiskStorageManager,
+    }
+
+    def test_expected_mapping_is_exhaustive(self) -> None:
+        assert set(self.EXPECTED_CLASS) == set(StorageType)
+
+    @pytest.mark.parametrize(
+        ("storage_type", "expected_class"),
+        EXPECTED_CLASS.items(),
+    )
+    def test_get_prefix(self, mock_settings, storage_type: StorageType, expected_class: type[StorageManagerInterface]):
+        storage_manager.get_storage_manager.cache_clear()
+        mock_settings.storage.type = storage_type
+        assert isinstance(storage_manager.get_storage_manager(), expected_class)
 
 
 class TestS3StorageManager:

@@ -96,7 +96,9 @@ class DiskStorageManager(StorageManagerInterface):
 
 
 @cache
-def get_storage_manager() -> S3StorageManager:
+def get_storage_manager() -> StorageManagerInterface:
     if settings.storage.type == StorageType.S3:
         return S3StorageManager()
-    raise NotImplementedError
+    elif settings.storage.type == StorageType.DISK:
+        return DiskStorageManager()
+    raise StorageManagerException(f"Unknown storage type {settings.storage.type}")
