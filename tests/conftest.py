@@ -19,7 +19,7 @@ def clean_s3_bucket(mock_s3_bucket):
 
 
 @pytest.fixture(autouse=True)
-def mock_settings(monkeypatch, mock_s3_bucket):
+def mock_settings(monkeypatch):
     settings = Settings.model_construct()
     monkeypatch.setattr("app.settings.get_settings", lambda: settings)
     yield settings

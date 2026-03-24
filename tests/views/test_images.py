@@ -17,9 +17,8 @@ def generate_image_uuid_mock(monkeypatch):
 @pytest.mark.asyncio
 class TestImageViewPost:
     @pytest.fixture(autouse=True)
-    def _setup(self, client, generate_image_uuid_mock, mock_s3_bucket):
+    def _setup(self, client, generate_image_uuid_mock):
         self.client = client
-        self.bucket = mock_s3_bucket
 
         self.image = Image.new(mode="RGB", size=(3, 3))
         img_stream = io.BytesIO()
@@ -57,7 +56,7 @@ class TestImageViewPost:
             None,
         ],
     )
-    async def test_ok(self, filename):
+    async def test_ok(self, filename, mock_s3_bucket):
         data = dict()
         data["base64"] = base64.b64encode(self.image_byte_array).decode()
         if filename:
@@ -73,7 +72,7 @@ class TestImageViewPost:
             "status": "ok",
             "uuid": "test_client/{}".format(expected_filename),
         }
-        assert self.bucket.Object(f"test_client/{expected_filename}").get()["Body"].read() == self.image_byte_array
+        assert mock_s3_bucket.Object(f"test_client/{expected_filename}").get()["Body"].read() == self.image_byte_array
 
 
 @pytest.mark.asyncio
@@ -81,13 +80,12 @@ class TestImageViewGet:
     @pytest.fixture(autouse=True)
     def _setup(self, client, mock_s3_bucket):
         self.client = client
-        self.bucket = mock_s3_bucket
 
         image = Image.new(mode="RGB", size=(3, 3))
         img_stream = io.BytesIO()
         image.save(img_stream, format="jpeg")
         self.image_byte_array = img_stream.getvalue()
-        self.bucket.Object("some_client_id/some_uuid").put(Body=self.image_byte_array)
+        mock_s3_bucket.Object("some_client_id/some_uuid").put(Body=self.image_byte_array)
 
     async def test_ok(self):
         response = await self.client.get("/v1/image/some_client_id/some_uuid")
