@@ -32,66 +32,26 @@ class TestGetStorageManager:
         assert isinstance(storage_manager.get_storage_manager(), expected_class)
 
 
-class TestS3StorageManager:
-    @pytest.fixture(autouse=True)
-    def _setup(self, mock_s3_bucket, mock_settings):
-        mock_settings.storage.type = StorageType.S3
-        mock_settings.storage.s3.bucket = mock_s3_bucket.name
-        self.bucket = mock_s3_bucket
-        self.manager = storage_manager.S3StorageManager()
+class _TestStorageManager:
+    manager: storage_manager.StorageManagerInterface
 
+    @pytest.fixture(autouse=True)
+    def _setup_image(self, mock_s3_bucket, mock_settings):
         self.pil_image = PILImage.new(mode="RGB", size=(3, 3))
         img_stream = io.BytesIO()
         self.pil_image.save(img_stream, format="jpeg")
         self.image_byte_array = img_stream.getvalue()
 
-    def test_save_image_ok(self):
-        self.manager.save_image(["client", "some_uuid"], Image(data=self.image_byte_array))
-        created_object = self.bucket.Object("client/some_uuid").get()
-        assert created_object["Body"].read() == self.image_byte_array
-        assert created_object["ContentType"] == "image/jpeg"
+    def _create_image_for_uuid(self, uuid: list[str]):
+        raise NotImplementedError
 
-    def test_get_image(self):
-        self.bucket.Object("some_uuid").put(Body=self.image_byte_array)
-        result_image = self.manager.get_image(["some_uuid"])
-        assert result_image.data == self.image_byte_array
-        assert result_image.mimetype == "image/jpeg"
-
-    def test_uuid_exists(self):
-        self.bucket.Object("some_uuid").put(Body=self.image_byte_array)
-        assert self.manager.uuid_exists(["some_uuid"]) is True
-        assert self.manager.uuid_exists(["some_other_uuid"]) is False
-
-    def test_get_image_unknown_key(self):
-        with pytest.raises(exceptions.ImageNotFoundError):
-            self.manager.get_image(["some_uuid"])
-
-
-class TestDiskStorageManager:
-    @pytest.fixture(autouse=True)
-    def _setup(self, mock_settings):
-        self.pil_image = PILImage.new(mode="RGB", size=(3, 3))
-        img_stream = io.BytesIO()
-        self.pil_image.save(img_stream, format="jpeg")
-        self.image_byte_array = img_stream.getvalue()
-
-        mock_settings.storage.type = StorageType.DISK
-        with tempfile.TemporaryDirectory() as folder:
-            mock_settings.storage.disk.path = self.folder = folder
-            self.manager = storage_manager.DiskStorageManager()
-            yield
-
-    def _create_image_for_uuid(self, uuid):
-        folder = Path(self.folder, *uuid)
-        folder.mkdir(parents=True, exist_ok=False)
-        with open(folder / "file", "wb") as f:
-            f.write(self.image_byte_array)
+    def _get_image_for_uuid(self, uuid: list[str]):
+        raise NotImplementedError
 
     def test_save_image_ok(self):
         self.manager.save_image(["client", "some_uuid"], Image(data=self.image_byte_array))
-        with open(os.path.join(self.folder, "client", "some_uuid", "file"), "rb") as f:
-            created_bytes = f.read()
-        assert created_bytes == self.image_byte_array
+        created_object = self._get_image_for_uuid(["client", "some_uuid"])
+        assert created_object == self.image_byte_array
 
     def test_get_image(self):
         uuid = ["client", "some_uuid"]
@@ -108,3 +68,43 @@ class TestDiskStorageManager:
     def test_get_image_unknown_key(self):
         with pytest.raises(exceptions.ImageNotFoundError):
             self.manager.get_image(["some_uuid"])
+
+    def test_save_image_fails_if_already_exists(self):
+        self.manager.save_image(["client", "some_uuid"], Image(data=self.image_byte_array))
+        with pytest.raises(storage_manager.ImageAlreadyExistsError):
+            self.manager.save_image(["client", "some_uuid"], Image(data=self.image_byte_array))
+
+
+class TestS3StorageManager(_TestStorageManager):
+    @pytest.fixture(autouse=True)
+    def _setup(self, mock_s3_bucket, mock_settings):
+        mock_settings.storage.type = StorageType.S3
+        mock_settings.storage.s3.bucket = mock_s3_bucket.name
+        self.bucket = mock_s3_bucket
+        self.manager = storage_manager.S3StorageManager()
+
+    def _create_image_for_uuid(self, uuid):
+        self.bucket.Object("/".join(uuid)).put(Body=self.image_byte_array)
+
+    def _get_image_for_uuid(self, uuid: list[str]):
+        return self.bucket.Object("/".join(uuid)).get()["Body"].read()
+
+
+class TestDiskStorageManager(_TestStorageManager):
+    @pytest.fixture(autouse=True)
+    def _setup(self, mock_settings):
+        mock_settings.storage.type = StorageType.DISK
+        with tempfile.TemporaryDirectory() as folder:
+            mock_settings.storage.disk.path = self.folder = folder
+            self.manager = storage_manager.DiskStorageManager()
+            yield
+
+    def _create_image_for_uuid(self, uuid):
+        folder = Path(self.folder, *uuid)
+        folder.mkdir(parents=True, exist_ok=False)
+        with open(folder / "file", "wb") as f:
+            f.write(self.image_byte_array)
+
+    def _get_image_for_uuid(self, uuid: list[str]):
+        with open(os.path.join(self.folder, *uuid, "file"), "rb") as f:
+            return f.read()

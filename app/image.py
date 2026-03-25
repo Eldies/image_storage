@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import PIL
 import PIL.Image
 
-from app.exceptions import UnprocessableImageException
+from app.exceptions import UnprocessableImageError
 
 
 @dataclass
@@ -17,10 +17,10 @@ class Image:
         try:
             pil_image = PIL.Image.open(io.BytesIO(self.data))
             if not pil_image.format:
-                raise UnprocessableImageException()
+                raise UnprocessableImageError()
             self.format = pil_image.format
         except PIL.UnidentifiedImageError:
-            raise UnprocessableImageException()
+            raise UnprocessableImageError()
 
     @property
     def mimetype(self) -> str:

@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger("image-storage")
 
 
+class ImageAlreadyExistsError(Exception):
+    pass
+
+
 class StorageManagerInterface:
     def save_image(self, uuid: list[str], image: Image) -> None:
         raise NotImplementedError
@@ -45,10 +49,19 @@ class S3StorageManager(StorageManagerInterface):
         return self.bucket.Object("/".join(uuid))
 
     def save_image(self, uuid: list[str], image: Image) -> None:
-        self.object_for_uuid(uuid).put(
-            Body=image.data,
-            ContentType=image.mimetype,
-        )
+        try:
+            self.object_for_uuid(uuid).put(
+                Body=image.data,
+                ContentType=image.mimetype,
+                IfNoneMatch="*",
+            )
+        except ClientError as e:
+            if (
+                e.response["Error"]["Code"] == "PreconditionFailed"
+                and e.response["Error"]["Condition"] == "If-None-Match"  # type: ignore[typeddict-item]
+            ):
+                raise ImageAlreadyExistsError
+            raise
 
     def uuid_exists(self, uuid: list[str]) -> bool:
         try:
@@ -77,7 +90,10 @@ class DiskStorageManager(StorageManagerInterface):
 
     def save_image(self, uuid: list[str], image: Image) -> None:
         path = self.image_path_for_uuid(uuid)
-        path.parent.mkdir(parents=True, exist_ok=False)
+        try:
+            path.parent.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            raise ImageAlreadyExistsError(f"Image with uuid {uuid} already exists")
         with open(path, "wb") as f:
             f.write(image.data)
 
