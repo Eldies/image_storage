@@ -9,3 +9,14 @@ htmlcov
 .github
 Readme.md
 LICENSE
+tests
+helm-chart
+.mypy_cache
+**/*.py[cod]
+**/__pycache__/
+.poetry
+.DS_Store
+coverage.xml
+data/
+.cache
+
