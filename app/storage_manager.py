@@ -9,6 +9,7 @@ from typing import TYPE_CHECKING
 import boto3
 from botocore.exceptions import ClientError
 
+from .exceptions import ImageNotFoundError
 from .image import Image
 from .settings import StorageType, settings
 
@@ -16,10 +17,6 @@ if TYPE_CHECKING:
     from mypy_boto3_s3.service_resource import Object  # pragma: no cover
 
 logger = logging.getLogger("image-storage")
-
-
-class StorageManagerException(Exception):
-    pass
 
 
 class StorageManagerInterface:
@@ -69,7 +66,7 @@ class S3StorageManager(StorageManagerInterface):
             )
         except ClientError as e:
             if e.response["Error"]["Code"] == "NoSuchKey":
-                raise StorageManagerException("Not Found")
+                raise ImageNotFoundError()
             raise
 
 
@@ -90,7 +87,7 @@ class DiskStorageManager(StorageManagerInterface):
     def get_image(self, uuid: list[str]) -> Image:
         path = self.image_path_for_uuid(uuid)
         if not path.exists():
-            raise StorageManagerException("Not Found")
+            raise ImageNotFoundError()
         with open(path, "rb") as f:
             return Image(data=f.read())
 
@@ -101,4 +98,4 @@ def get_storage_manager() -> StorageManagerInterface:
         return S3StorageManager()
     elif settings.storage.type == StorageType.DISK:
         return DiskStorageManager()
-    raise StorageManagerException(f"Unknown storage type {settings.storage.type}")
+    raise Exception(f"Unknown storage type {settings.storage.type}")

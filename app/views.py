@@ -8,11 +8,11 @@ from fastapi.security import APIKeyHeader
 from starlette import status
 from starlette.responses import Response
 
-from .image import Image, ImageException
+from .image import Image
 from .logic import generate_image_uuid, get_client_info_by_api_key
 from .schemas import ErrorResponse, PostImageRequest, PostImageResponse
 from .settings import ClientInfo
-from .storage_manager import StorageManagerException, get_storage_manager
+from .storage_manager import get_storage_manager
 
 router_api = APIRouter(prefix="/v1")
 logger = logging.getLogger("image-storage")
@@ -43,22 +43,9 @@ def post_image(
     filename = generate_image_uuid(params.file_name)
     logger.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
 
-    try:
-        image = Image(data=base64.b64decode(params.base64))
-        if not image.format:
-            raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-                detail="Cannot determine image format",
-            )
-    except ImageException as e:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail=str(*e.args),
-        )
-
     get_storage_manager().save_image(
         uuid=[client.id, filename],
-        image=image,
+        image=Image(data=base64.b64decode(params.base64)),
     )
 
     return PostImageResponse(
@@ -72,11 +59,5 @@ def post_image(
     responses={404: {"model": ErrorResponse}},
 )
 def get_image(client_id: str, uuid: str) -> Response:
-    try:
-        image = get_storage_manager().get_image([client_id, uuid])
-        return Response(content=image.data, media_type=image.mimetype)
-    except StorageManagerException as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(*e.args),
-        )
+    image = get_storage_manager().get_image([client_id, uuid])
+    return Response(content=image.data, media_type=image.mimetype)

@@ -52,9 +52,7 @@ class TestImageViewPost:
     async def test_empty_base64(self):
         response = await self.client.post("/v1/image/", json={"base64": ""}, headers={"X-API-KEY": "TEST_API_KEY"})
         assert response.status_code == 422
-        assert response.json() == {
-            "detail": "Cannot identify image file",
-        }
+        assert response.json() == {"error": "Cannot process image file", "status": "error"}
 
     @pytest.mark.parametrize(
         "filename",
@@ -115,5 +113,5 @@ class TestImageViewGet:
         assert response.headers["Content-Type"] == "application/json"
         assert response.json() == dict(
             status="error",
-            error="Not Found",
+            error="Image does not exist",
         )

@@ -10,6 +10,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from . import views
+from .exceptions import ImageStorageException
 from .schemas import ErrorResponse
 from .settings import settings
 
@@ -36,7 +37,8 @@ instrumentator = Instrumentator().instrument(app)
 @app.exception_handler(401)
 @app.exception_handler(403)
 @app.exception_handler(404)
-async def exception_handler(request: Request, exc: HTTPException) -> JSONResponse:
+@app.exception_handler(ImageStorageException)
+async def exception_handler(request: Request, exc: HTTPException | ImageStorageException) -> JSONResponse:
     return JSONResponse(
         status_code=exc.status_code,
         content=ErrorResponse(error=exc.detail).model_dump(),

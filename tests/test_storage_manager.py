@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from PIL import Image as PILImage
 
-from app import storage_manager
+from app import exceptions, storage_manager
 from app.image import Image
 from app.settings import StorageType
 from app.storage_manager import StorageManagerInterface
@@ -63,7 +63,7 @@ class TestS3StorageManager:
         assert self.manager.uuid_exists(["some_other_uuid"]) is False
 
     def test_get_image_unknown_key(self):
-        with pytest.raises(storage_manager.StorageManagerException):
+        with pytest.raises(exceptions.ImageNotFoundError):
             self.manager.get_image(["some_uuid"])
 
 
@@ -106,5 +106,5 @@ class TestDiskStorageManager:
         assert self.manager.uuid_exists(["some_other_uuid"]) is False
 
     def test_get_image_unknown_key(self):
-        with pytest.raises(storage_manager.StorageManagerException):
+        with pytest.raises(exceptions.ImageNotFoundError):
             self.manager.get_image(["some_uuid"])

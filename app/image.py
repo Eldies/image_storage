@@ -1,27 +1,26 @@
+# -*- coding: utf-8 -*-
 import io
 from dataclasses import dataclass
-from functools import cached_property
 
 import PIL
 import PIL.Image
 
-
-class ImageException(Exception):
-    pass
+from app.exceptions import UnprocessableImageException
 
 
 @dataclass
 class Image:
     data: bytes
+    format: str = ""
 
-    @cached_property
-    def format(self) -> str:
+    def __post_init__(self) -> None:
         try:
             pil_image = PIL.Image.open(io.BytesIO(self.data))
-            assert pil_image.format is not None
-            return pil_image.format
+            if not pil_image.format:
+                raise UnprocessableImageException()
+            self.format = pil_image.format
         except PIL.UnidentifiedImageError:
-            raise ImageException("Cannot identify image file")
+            raise UnprocessableImageException()
 
     @property
     def mimetype(self) -> str:
