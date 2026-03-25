@@ -1,0 +1,29 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: traefik.io/v1alpha1
+kind: TraefikService
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  weighted:
+    services:
+      - name: {{ .Release.Name }}
+        weight: 1
+        port: web
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - match: Host(`{{ .Values.ingress.host }}`) && PathPrefix(`/v1`)
+      kind: Rule
+      services:
+        - name: {{ .Release.Name }}
+          port: 80
+          kind: TraefikService
+  tls:
+    certResolver: letsencrypt
+{{- end }}
