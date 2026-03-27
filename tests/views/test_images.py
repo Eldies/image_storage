@@ -11,7 +11,7 @@ def generate_image_uuid_mock(monkeypatch):
     def mock_func(suggested_filename):
         return f'{suggested_filename or "aaa"}_generated'
 
-    monkeypatch.setattr("app.views.generate_image_uuid", mock_func)
+    monkeypatch.setattr("app.logic.randomize_filename", mock_func)
 
 
 @pytest.mark.asyncio
@@ -78,6 +78,27 @@ class TestImageViewPost:
             "uuid": "test_client/{}".format(expected_filename),
         }
         assert mock_s3_bucket.Object(f"test_client/{expected_filename}").get()["Body"].read() == self.image_byte_array
+
+    async def test_regenerates_uuid_if_exists(self, mock_s3_bucket, monkeypatch):
+        mock_s3_bucket.Object("test_client/generated1").put(Body=self.image_byte_array)
+
+        data = dict()
+        data["base64"] = base64.b64encode(self.image_byte_array).decode()
+
+        calls = iter(["generated1", "generated2"])
+
+        def mock_func(suggested_filename):
+            return next(calls)
+
+        monkeypatch.setattr("app.logic.randomize_filename", mock_func)
+
+        response = await self.client.post(
+            "/v1/image/",
+            headers={"X-API-KEY": "TEST_API_KEY"},
+            json=data,
+        )
+
+        assert mock_s3_bucket.Object("test_client/generated2").get()["Body"].read() == self.image_byte_array
 
 
 @pytest.mark.asyncio

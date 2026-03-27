@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import functools
 import logging
 from typing import Annotated
 
@@ -9,10 +10,10 @@ from starlette import status
 from starlette.responses import Response
 
 from .image import Image
-from .logic import generate_image_uuid, get_client_info_by_api_key
+from .logic import generate_uuid, get_client_info_by_api_key
 from .schemas import ErrorResponse, PostImageRequest, PostImageResponse
 from .settings import ClientInfo
-from .storage_manager import get_storage_manager
+from .storage_manager import get_storage_manager, save_image_retrying
 
 router_api = APIRouter(prefix="/v1")
 logger = logging.getLogger("image-storage")
@@ -40,17 +41,9 @@ def post_image(
     client: Annotated[ClientInfo, Depends(validate_client)],
     params: PostImageRequest,
 ) -> PostImageResponse:
-    filename = generate_image_uuid(params.file_name)
-    logger.debug('Saving image with uuid "{}" for client "{}"'.format(filename, client.id))
-
-    get_storage_manager().save_image(
-        uuid=[client.id, filename],
-        image=Image(data=base64.b64decode(params.base64)),
-    )
-
-    return PostImageResponse(
-        uuid="{}/{}".format(client.id, filename),
-    )
+    uuid_generator = functools.partial(generate_uuid, suggested_filename=params.file_name, client=client)
+    uuid = save_image_retrying(uuid_generator, image=Image(data=base64.b64decode(params.base64)))
+    return PostImageResponse(uuid="/".join(uuid))
 
 
 @router_api.get(

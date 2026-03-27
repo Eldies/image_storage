@@ -4,10 +4,11 @@ from __future__ import annotations
 import logging
 from functools import cache
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 import boto3
 from botocore.exceptions import ClientError
+from tenacity import retry, retry_if_exception_type
 
 from .exceptions import ImageNotFoundError
 from .image import Image
@@ -115,3 +116,10 @@ def get_storage_manager() -> StorageManagerInterface:
     elif settings.storage.type == StorageType.DISK:
         return DiskStorageManager()
     raise Exception(f"Unknown storage type {settings.storage.type}")
+
+
+@retry(retry=retry_if_exception_type(ImageAlreadyExistsError))
+def save_image_retrying(uuid_generator: Callable[[], list[str]], image: Image) -> list[str]:
+    uuid = uuid_generator()
+    get_storage_manager().save_image(uuid=uuid, image=image)
+    return uuid

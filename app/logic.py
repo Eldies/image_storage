@@ -14,16 +14,19 @@ def get_client_info_by_api_key(api_key: str) -> ClientInfo | None:
     return None
 
 
-def generate_image_uuid(suggested_filename: str | None = None) -> str:
+def randomize_filename(suggested_filename: str | None = None) -> str:
     """
     Generates uuid, tries to make it unique:
         uses timestamp in milliseconds, so uuids generated in different milliseconds should differ
         for uuids generated at the same millisecond, adds 3 random base58 symbols, which gives 58^3=195112 options
     """
-    random_string = "".join(random.choice(base58.alphabet.decode()) for _ in range(3))
-    timestamp_ms = int(time.time() * 1000)
-    unique_part = "{}{}".format(random_string, base58.b58encode_int(timestamp_ms).decode("utf-8"))
+    random_string = "".join(random.choices(base58.alphabet.decode(), k=3))
+    timestamp_string = base58.b58encode_int(int(time.time() * 1000)).decode("utf-8")
+    result = f"{random_string}{timestamp_string}"
     if suggested_filename:
-        return "{}-{}".format(suggested_filename, unique_part)
-    else:
-        return unique_part
+        result = f"{suggested_filename}-{result}"
+    return result
+
+
+def generate_uuid(suggested_filename: str | None, client: ClientInfo) -> list[str]:
+    return [client.id, randomize_filename(suggested_filename)]

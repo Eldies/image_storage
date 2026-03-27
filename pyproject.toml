@@ -13,6 +13,7 @@ pillow = ">=12.1.1"
 boto3 = ">=1.42.59"
 prometheus-fastapi-instrumentator = "^7.0.0"
 sentry-sdk = {version = ">=2.53.0", extras = ["fastapi"]}
+tenacity = ">=9.1.4"
 
 [tool.poetry.group.test]
 optional = true
