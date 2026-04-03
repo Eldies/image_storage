@@ -19,6 +19,6 @@ storage:
 sentry:
   dsn: ""
 
-clientsInfo: []
-#  - id:
+clients: {}
+#  id:
 #    apiKey:

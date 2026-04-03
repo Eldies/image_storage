@@ -10,9 +10,9 @@ from starlette import status
 from starlette.responses import Response
 
 from .image import Image
-from .logic import generate_uuid, get_client_info_by_api_key
+from .logic import generate_uuid
 from .schemas import ErrorResponse, PostImageRequest, PostImageResponse
-from .settings import ClientInfo
+from .settings import ClientInfo, settings
 from .storage_manager import get_storage_manager, save_image_retrying
 
 router_api = APIRouter(prefix="/v1")
@@ -20,8 +20,7 @@ logger = logging.getLogger("image-storage")
 
 
 def validate_client(api_key: str = Depends(APIKeyHeader(name="X-API-KEY"))) -> ClientInfo:
-    logger.debug('Provided api_key: "{}"'.format(api_key))
-    client = get_client_info_by_api_key(api_key)
+    client = settings.clients.by_api_key.get(api_key)
     if client is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

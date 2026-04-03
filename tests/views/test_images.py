@@ -5,6 +5,8 @@ import io
 import pytest
 from PIL import Image
 
+from app.settings import ClientConfig
+
 
 @pytest.fixture()
 def generate_image_uuid_mock(monkeypatch):
@@ -17,8 +19,9 @@ def generate_image_uuid_mock(monkeypatch):
 @pytest.mark.asyncio
 class TestImageViewPost:
     @pytest.fixture(autouse=True)
-    def _setup(self, client, generate_image_uuid_mock):
+    def _setup(self, client, generate_image_uuid_mock, mock_settings):
         self.client = client
+        mock_settings.raw_clients["test_client"] = ClientConfig(api_key="TEST_API_KEY")
 
         self.image = Image.new(mode="RGB", size=(3, 3))
         img_stream = io.BytesIO()
@@ -92,7 +95,7 @@ class TestImageViewPost:
 
         monkeypatch.setattr("app.logic.randomize_filename", mock_func)
 
-        response = await self.client.post(
+        await self.client.post(
             "/v1/image/",
             headers={"X-API-KEY": "TEST_API_KEY"},
             json=data,
