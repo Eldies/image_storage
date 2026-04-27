@@ -20,5 +20,6 @@ spec:
             backend:
               service:
                 name: {{ .Release.Name }}
-                port: web
+                port:
+                  number: 5000
 {{- end }}
