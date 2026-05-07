@@ -7,8 +7,7 @@ services:
       - ./app:/src/app
       - ./data:/data
     environment:
-      CLIENTS_INFO__0__api_key: api_key
-      CLIENTS_INFO__0__id: client
+      CLIENTS__client__api_key: api_key
       STORAGE__TYPE: disk
       STORAGE__DISK__PATH: /data
       SENTRY__DSN: ${SENTRY_DSN}

@@ -8,6 +8,7 @@ from app.settings import ClientInfo
 
 
 def randomize_filename(suggested_filename: str | None = None) -> str:
+    """The goal is to lower the chance of collision"""
     random_string = "".join(random.choices(base58.alphabet.decode(), k=3))
     timestamp_string = base58.b58encode_int(int(time.time() * 1000)).decode("utf-8")
     result = f"{random_string}{timestamp_string}"
