@@ -3,8 +3,11 @@ import base64
 import io
 
 import pytest
+from httpx import ASGITransport, AsyncClient
 from PIL import Image
 
+from app import storage_manager
+from app.main import app
 from app.settings import ClientConfig
 
 
@@ -102,6 +105,38 @@ class TestImageViewPost:
         )
 
         assert mock_s3_bucket.Object("test_client/generated2").get()["Body"].read() == self.image_byte_array
+
+    async def test_stops_retrying_if_generated_uuid_always_exists(self, mock_s3_bucket, monkeypatch):
+        mock_s3_bucket.Object("test_client/generated").put(Body=self.image_byte_array)
+
+        data = dict()
+        data["base64"] = base64.b64encode(self.image_byte_array).decode()
+
+        calls = 0
+
+        def mock_func(suggested_filename):
+            nonlocal calls
+            calls += 1
+            return "generated"
+
+        monkeypatch.setattr("app.logic.randomize_filename", mock_func)
+
+        async with AsyncClient(
+            transport=ASGITransport(app=app, raise_app_exceptions=False),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.post(
+                "/v1/image/",
+                headers={"X-API-KEY": "TEST_API_KEY"},
+                json=data,
+            )
+
+        assert response.status_code == 409
+        assert response.json() == {
+            "status": "error",
+            "error": "Could not generate a unique image id; please call this endpoint again",
+        }
+        assert calls == storage_manager.MAX_SAVE_IMAGE_ATTEMPTS
 
 
 @pytest.mark.asyncio

@@ -34,6 +34,7 @@ def validate_client(api_key: str = Depends(APIKeyHeader(name="X-API-KEY"))) -> C
     responses={
         401: {"model": ErrorResponse},
         403: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
     },
 )
 def post_image(

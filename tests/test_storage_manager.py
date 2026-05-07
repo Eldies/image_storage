@@ -32,6 +32,28 @@ class TestGetStorageManager:
         assert isinstance(storage_manager.get_storage_manager(), expected_class)
 
 
+class TestSaveImageRetrying:
+    def test_stops_after_max_attempts(self, monkeypatch):
+        calls = 0
+        pil_image = PILImage.new(mode="RGB", size=(3, 3))
+        img_stream = io.BytesIO()
+        pil_image.save(img_stream, format="jpeg")
+        image = Image(data=img_stream.getvalue())
+
+        class AlwaysCollidingStorageManager:
+            def save_image(self, uuid: list[str], image: Image) -> None:
+                nonlocal calls
+                calls += 1
+                raise storage_manager.ImageAlreadyExistsError()
+
+        monkeypatch.setattr(storage_manager, "get_storage_manager", lambda: AlwaysCollidingStorageManager())
+
+        with pytest.raises(storage_manager.ImageAlreadyExistsError):
+            storage_manager.save_image_retrying(lambda: ["client", "same_uuid"], image)
+
+        assert calls == storage_manager.MAX_SAVE_IMAGE_ATTEMPTS
+
+
 class _TestStorageManager:
     manager: storage_manager.StorageManagerInterface
 

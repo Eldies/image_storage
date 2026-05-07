@@ -8,9 +8,9 @@ from typing import TYPE_CHECKING, Callable
 
 import boto3
 from botocore.exceptions import ClientError
-from tenacity import retry, retry_if_exception_type
+from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from .exceptions import ImageNotFoundError
+from .exceptions import ImageNotFoundError, ImageStorageOutException
 from .image import Image
 from .settings import StorageType, settings
 
@@ -18,10 +18,12 @@ if TYPE_CHECKING:
     from mypy_boto3_s3.service_resource import Object  # pragma: no cover
 
 logger = logging.getLogger("image-storage")
+MAX_SAVE_IMAGE_ATTEMPTS = 5
 
 
-class ImageAlreadyExistsError(Exception):
-    pass
+class ImageAlreadyExistsError(ImageStorageOutException):
+    status_code = 409
+    detail = "Could not generate a unique image id; please call this endpoint again"
 
 
 class StorageManagerInterface:
@@ -118,7 +120,11 @@ def get_storage_manager() -> StorageManagerInterface:
     raise Exception(f"Unknown storage type {settings.storage.type}")
 
 
-@retry(retry=retry_if_exception_type(ImageAlreadyExistsError))
+@retry(
+    retry=retry_if_exception_type(ImageAlreadyExistsError),
+    stop=stop_after_attempt(MAX_SAVE_IMAGE_ATTEMPTS),
+    reraise=True,
+)
 def save_image_retrying(uuid_generator: Callable[[], list[str]], image: Image) -> list[str]:
     uuid = uuid_generator()
     get_storage_manager().save_image(uuid=uuid, image=image)
