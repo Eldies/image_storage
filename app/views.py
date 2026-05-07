@@ -5,7 +5,7 @@ import functools
 import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import APIKeyHeader
 from starlette import status
 from starlette.responses import Response
@@ -60,6 +60,11 @@ def post_image(
     response_class=Response,
     responses={404: {"model": ErrorResponse}},
 )
-def get_image(client_id: str, uuid: str) -> Response:
-    image = get_storage_manager().get_image([client_id, uuid])
+def get_image(
+    client_id: str,
+    uuid: str,
+    height: Annotated[int | None, Query(gt=0)] = None,
+    width: Annotated[int | None, Query(gt=0)] = None,
+) -> Response:
+    image = get_storage_manager().get_image([client_id, uuid]).resized_to_fit(width=width, height=height)
     return Response(content=image.data, media_type=image.mimetype)

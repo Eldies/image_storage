@@ -159,7 +159,7 @@ class TestImageViewGet:
     def _setup(self, client, mock_s3_bucket):
         self.client = client
 
-        image = Image.new(mode="RGB", size=(3, 3))
+        image = Image.new(mode="RGB", size=(200, 100))
         img_stream = io.BytesIO()
         image.save(img_stream, format="jpeg")
         self.image_byte_array = img_stream.getvalue()
@@ -170,6 +170,34 @@ class TestImageViewGet:
         assert response.status_code == 200
         assert response.headers["Content-Type"] == "image/jpeg"
         assert response.content == self.image_byte_array
+
+    @pytest.mark.parametrize(
+        ("query", "expected_size"),
+        [
+            ("height=100&width=100", (100, 50)),
+            ("width=50", (50, 25)),
+            ("height=25", (50, 25)),
+        ],
+    )
+    async def test_resized(self, query: str, expected_size: tuple[int, int]):
+        response = await self.client.get(f"/v1/image/some_client_id/some_uuid?{query}")
+
+        assert response.status_code == 200
+        assert response.headers["Content-Type"] == "image/jpeg"
+        assert Image.open(io.BytesIO(response.content)).size == expected_size
+
+    async def test_resize_does_not_upscale(self):
+        response = await self.client.get("/v1/image/some_client_id/some_uuid?height=400&width=400")
+
+        assert response.status_code == 200
+        assert response.headers["Content-Type"] == "image/jpeg"
+        assert response.content == self.image_byte_array
+
+    @pytest.mark.parametrize("query", ["height=0", "width=0", "height=-1", "width=-1"])
+    async def test_resize_requires_positive_dimensions(self, query: str):
+        response = await self.client.get(f"/v1/image/some_client_id/some_uuid?{query}")
+
+        assert response.status_code == 422
 
     async def test_no_client_id(self):
         response = await self.client.get("/v1/image/some_uuid")
