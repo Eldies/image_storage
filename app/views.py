@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import base64
+import binascii
 import functools
 import logging
 from typing import Annotated
@@ -9,6 +10,7 @@ from fastapi.security import APIKeyHeader
 from starlette import status
 from starlette.responses import Response
 
+from .exceptions import UnprocessableImageError
 from .image import Image
 from .logic import generate_uuid
 from .schemas import ErrorResponse, PostImageRequest, PostImageResponse
@@ -29,6 +31,13 @@ def validate_client(api_key: str = Depends(APIKeyHeader(name="X-API-KEY"))) -> C
     return client
 
 
+def decode_base64_image(data: bytes) -> bytes:
+    try:
+        return base64.b64decode(data, validate=True)
+    except binascii.Error:
+        raise UnprocessableImageError()
+
+
 @router_api.post(
     "/image/",
     responses={
@@ -42,7 +51,7 @@ def post_image(
     params: PostImageRequest,
 ) -> PostImageResponse:
     uuid_generator = functools.partial(generate_uuid, suggested_filename=params.file_name, client=client)
-    uuid = save_image_retrying(uuid_generator, image=Image(data=base64.b64decode(params.base64)))
+    uuid = save_image_retrying(uuid_generator, image=Image(data=decode_base64_image(params.base64)))
     return PostImageResponse(uuid="/".join(uuid))
 
 

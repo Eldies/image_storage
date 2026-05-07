@@ -60,6 +60,20 @@ class TestImageViewPost:
         assert response.status_code == 422
         assert response.json() == {"error": "Cannot process image file", "status": "error"}
 
+    async def test_invalid_base64(self):
+        async with AsyncClient(
+            transport=ASGITransport(app=app, raise_app_exceptions=False),
+            base_url="http://testserver",
+        ) as client:
+            response = await client.post(
+                "/v1/image/",
+                json={"base64": "not-valid-base64"},
+                headers={"X-API-KEY": "TEST_API_KEY"},
+            )
+
+        assert response.status_code == 422
+        assert response.json() == {"error": "Cannot process image file", "status": "error"}
+
     @pytest.mark.parametrize(
         "filename",
         [
