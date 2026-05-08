@@ -78,6 +78,7 @@ class TestImageViewPost:
         "filename",
         [
             "filename",
+            "folder/sub-folder/image.name_01",
             None,
         ],
     )
@@ -98,6 +99,37 @@ class TestImageViewPost:
             "uuid": "test_client/{}".format(expected_filename),
         }
         assert mock_s3_bucket.Object(f"test_client/{expected_filename}").get()["Body"].read() == self.image_byte_array
+
+    @pytest.mark.parametrize(
+        "filename",
+        [
+            ".",
+            "..",
+            "./filename",
+            "../filename",
+            "folder/./filename",
+            "folder/../filename",
+            "folder//filename",
+            "/filename",
+            "folder/",
+            "folder with spaces/filename",
+            "folder\\filename",
+            "folder:filename",
+        ],
+    )
+    async def test_rejects_unsafe_file_name(self, filename, mock_s3_bucket):
+        data = {
+            "base64": base64.b64encode(self.image_byte_array).decode(),
+            "file_name": filename,
+        }
+
+        response = await self.client.post(
+            "/v1/image/",
+            headers={"X-API-KEY": "TEST_API_KEY"},
+            json=data,
+        )
+
+        assert response.status_code == 422
 
     async def test_regenerates_uuid_if_exists(self, mock_s3_bucket, monkeypatch):
         mock_s3_bucket.Object("test_client/generated1").put(Body=self.image_byte_array)
