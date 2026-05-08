@@ -79,6 +79,7 @@ class TestImageViewPost:
         [
             "filename",
             "folder/sub-folder/image.name_01",
+            "folder/image%20name.jpg",
             None,
         ],
     )
