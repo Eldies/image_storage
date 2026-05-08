@@ -3,7 +3,6 @@ import re
 
 from pydantic import BaseModel, field_validator
 
-
 FILE_NAME_PATTERN = re.compile(r"^[a-zA-Z0-9._/-]+$")
 
 
