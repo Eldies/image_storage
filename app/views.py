@@ -56,7 +56,7 @@ def post_image(
 
 
 @router_api.get(
-    "/image/{client_id}/{uuid}",
+    "/image/{client_id}/{uuid:path}",
     response_class=Response,
     responses={404: {"model": ErrorResponse}},
 )

@@ -203,6 +203,16 @@ class TestImageViewGet:
         assert response.headers["Content-Type"] == "image/jpeg"
         assert response.content == self.image_byte_array
 
+    async def test_path_like_uuid(self, mock_s3_bucket):
+        uuid = "path/like/uuid"
+        mock_s3_bucket.Object(f"some_client_id/{uuid}").put(Body=self.image_byte_array)
+
+        response = await self.client.get(f"/v1/image/some_client_id/{uuid}")
+
+        assert response.status_code == 200
+        assert response.headers["Content-Type"] == "image/jpeg"
+        assert response.content == self.image_byte_array
+
     @pytest.mark.parametrize(
         ("query", "expected_size"),
         [
@@ -231,13 +241,13 @@ class TestImageViewGet:
 
         assert response.status_code == 422
 
-    async def test_no_client_id(self):
-        response = await self.client.get("/v1/image/some_uuid")
+    async def test_no_uuid(self):
+        response = await self.client.get("/v1/image/some_client_id/")
         assert response.status_code == 404
         assert response.headers["Content-Type"] == "application/json"
         assert response.json() == dict(
             status="error",
-            error="Not Found",
+            error="Image does not exist",
         )
 
     async def test_unknown_uuid(self):
